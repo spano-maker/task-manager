@@ -178,6 +178,35 @@
     /* Time entry modal */
     .time-modal-grid { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
     .time-modal-grid .full { grid-column: 1 / -1; }
+
+    /* Projects view */
+    .projects-grid { display: grid; grid-template-columns: 1fr; gap: var(--grid-gap); }
+    @media (min-width: 768px) { .projects-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .projects-grid { grid-template-columns: repeat(3, 1fr); } }
+    .project-card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: var(--card-padding); box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease; cursor: pointer; }
+    .project-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .project-card h3 { margin: 0 0 12px; font-size: var(--text-lg); display: flex; align-items: center; gap: 8px; }
+    .project-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+    .project-stat { text-align: center; padding: 12px; background: var(--gray-50); border-radius: var(--radius-md); }
+    .project-stat-value { font-size: var(--text-xl); font-weight: 700; color: var(--primary); }
+    .project-stat-label { font-size: var(--text-xs); color: var(--gray-700); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+    /* Project detail modal */
+    .project-modal-content { max-height: 60vh; overflow-y: auto; }
+    .project-task-list { display: grid; gap: 8px; margin-top: 12px; }
+    .project-task-item { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 12px; background: var(--gray-50); border-radius: var(--radius-md); border: 1px solid var(--gray-200); }
+    .project-task-item:hover { background: var(--gray-100); }
+    .project-task-info h4 { margin: 0 0 4px; font-size: var(--text-base); }
+    .project-task-meta { font-size: var(--text-sm); color: var(--gray-700); }
+    .project-task-time { text-align: right; }
+    .project-task-time .hours { font-size: var(--text-xl); font-weight: 700; color: var(--primary); }
+    .project-task-time .label { font-size: var(--text-xs); color: var(--gray-700); }
+    .project-summary { background: var(--primary); color: white; padding: 16px; border-radius: var(--radius-md); margin-bottom: 16px; }
+    .project-summary h3 { margin: 0 0 12px; }
+    .project-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .project-summary-item { text-align: center; }
+    .project-summary-value { font-size: 1.5rem; font-weight: 700; }
+    .project-summary-label { font-size: var(--text-xs); opacity: 0.9; text-transform: uppercase; }
   
 /* --- Stats layout refinements --- */
 .charts-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
@@ -225,6 +254,7 @@
       <button class="tab active" data-tab="tutte" role="tab">🔋 Tutte</button>
       <button class="tab" data-tab="critiche" role="tab">🚨 Critiche</button>
       <button class="tab" data-tab="completate" role="tab">✅ Completate</button>
+      <button class="tab" data-tab="progetti" role="tab">📂 Progetti</button>
       <button class="tab" data-tab="timesheet" role="tab">⏱️ Timesheet</button>
       <button class="tab" data-tab="statistiche" role="tab">📊 Statistiche</button>
       <button class="tab" data-tab="impostazioni" role="tab">⚙️ Impostazioni</button>
@@ -367,6 +397,19 @@
     </div>
   </div>
 
+  <!-- MODAL: Project Detail -->
+  <div id="projectModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document" style="max-width: 800px;">
+      <header>
+        <div id="projectModalTitle" class="title" style="font-size:1.1rem">📂 Dettaglio Progetto</div>
+        <button id="projectModalClose" class="btn">✖</button>
+      </header>
+      <div class="content project-modal-content">
+        <div id="projectModalBody"></div>
+      </div>
+    </div>
+  </div>
+
   <script>
   // ==============================
   //  DATA MODEL & DEFAULT SETUP
@@ -401,7 +444,7 @@
    *  completedTasks: Task[],
    *  projects: string[],
    *  people: string[],
-   *  tab: 'tutte'|'critiche'|'completate'|'statistiche'|'impostazioni'|'timesheet',
+   *  tab: 'tutte'|'critiche'|'completate'|'statistiche'|'impostazioni'|'timesheet'|'progetti',
    *  filters: { priority: 'all'|'bassa'|'media'|'alta'|'critica', due: 'all'|'overdue'|'today'|'next7'|'nodue' },
    *  q: string,
    *  activeTimerId: number|null,
@@ -556,6 +599,8 @@
       renderTaskList(mount, applyFilters(list));
     } else if (state.tab === 'completate') {
       renderCompleted(mount);
+    } else if (state.tab === 'progetti') {
+      renderProjects(mount);
     } else if (state.tab === 'timesheet') {
       renderTimesheet(mount);
     } else if (state.tab === 'statistiche') {
@@ -703,6 +748,203 @@
         item.append(info, act); list.appendChild(item);
       });
     root.appendChild(list);
+  }
+
+  function renderProjects(root) {
+    const allTasks = [...state.tasks, ...state.completedTasks];
+
+    // Calculate stats for each project
+    const projectStats = {};
+    state.projects.forEach(project => {
+      const tasks = allTasks.filter(t => t.project === project);
+      const openTasks = tasks.filter(t => !t.completedDate).length;
+      const completedTasks = tasks.filter(t => t.completedDate).length;
+      const totalTime = tasks.reduce((sum, t) => {
+        return sum + (t.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
+      }, 0);
+
+      projectStats[project] = {
+        totalTasks: tasks.length,
+        openTasks,
+        completedTasks,
+        totalTimeSeconds: totalTime,
+        totalTimeHours: (totalTime / 3600).toFixed(1),
+        tasks
+      };
+    });
+
+    // Also include tasks without project
+    const noProjectTasks = allTasks.filter(t => !t.project || t.project === '');
+    if (noProjectTasks.length > 0) {
+      const totalTime = noProjectTasks.reduce((sum, t) => {
+        return sum + (t.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
+      }, 0);
+
+      projectStats['Senza progetto'] = {
+        totalTasks: noProjectTasks.length,
+        openTasks: noProjectTasks.filter(t => !t.completedDate).length,
+        completedTasks: noProjectTasks.filter(t => t.completedDate).length,
+        totalTimeSeconds: totalTime,
+        totalTimeHours: (totalTime / 3600).toFixed(1),
+        tasks: noProjectTasks
+      };
+    }
+
+    if (Object.keys(projectStats).length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = 'Nessun progetto configurato. Vai in Impostazioni per aggiungerne.';
+      root.appendChild(empty);
+      return;
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'projects-grid';
+
+    Object.entries(projectStats)
+      .sort((a, b) => b[1].totalTimeSeconds - a[1].totalTimeSeconds) // Sort by time desc
+      .forEach(([projectName, stats]) => {
+        const card = document.createElement('div');
+        card.className = 'project-card';
+        card.addEventListener('click', () => openProjectModal(projectName, stats));
+
+        const h3 = document.createElement('h3');
+        h3.innerHTML = `📂 ${projectName}`;
+
+        const statsGrid = document.createElement('div');
+        statsGrid.className = 'project-stats-grid';
+
+        statsGrid.innerHTML = `
+          <div class="project-stat">
+            <div class="project-stat-value">${stats.totalTasks}</div>
+            <div class="project-stat-label">Task Totali</div>
+          </div>
+          <div class="project-stat">
+            <div class="project-stat-value">${stats.openTasks}</div>
+            <div class="project-stat-label">In Corso</div>
+          </div>
+          <div class="project-stat">
+            <div class="project-stat-value">${stats.completedTasks}</div>
+            <div class="project-stat-label">Completate</div>
+          </div>
+          <div class="project-stat">
+            <div class="project-stat-value">${stats.totalTimeHours}h</div>
+            <div class="project-stat-label">Tempo Totale</div>
+          </div>
+        `;
+
+        card.append(h3, statsGrid);
+        grid.appendChild(card);
+      });
+
+    root.appendChild(grid);
+  }
+
+  function openProjectModal(projectName, stats) {
+    const modal = $('#projectModal');
+    const body = $('#projectModalBody');
+
+    $('#projectModalTitle').textContent = `📂 ${projectName}`;
+
+    // Summary section
+    const summary = document.createElement('div');
+    summary.className = 'project-summary';
+    summary.innerHTML = `
+      <h3>Riepilogo</h3>
+      <div class="project-summary-grid">
+        <div class="project-summary-item">
+          <div class="project-summary-value">${stats.totalTasks}</div>
+          <div class="project-summary-label">Task</div>
+        </div>
+        <div class="project-summary-item">
+          <div class="project-summary-value">${stats.completedTasks}</div>
+          <div class="project-summary-label">Completate</div>
+        </div>
+        <div class="project-summary-item">
+          <div class="project-summary-value">${stats.totalTimeHours}h</div>
+          <div class="project-summary-label">Tempo Totale</div>
+        </div>
+      </div>
+    `;
+
+    // Tasks list
+    const tasksSection = document.createElement('div');
+    const tasksTitle = document.createElement('h4');
+    tasksTitle.textContent = 'Attività e Tempo Impiegato';
+    tasksTitle.style.marginBottom = '12px';
+
+    const tasksList = document.createElement('div');
+    tasksList.className = 'project-task-list';
+
+    if (stats.tasks.length === 0) {
+      tasksList.innerHTML = '<p style="text-align:center; color:var(--gray-500); padding:24px;">Nessuna attività in questo progetto</p>';
+    } else {
+      // Sort tasks by time spent desc
+      stats.tasks
+        .sort((a, b) => {
+          const timeA = (a.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
+          const timeB = (b.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
+          return timeB - timeA;
+        })
+        .forEach(task => {
+          const taskTime = (task.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
+          const taskHours = (taskTime / 3600).toFixed(2);
+          const estimatedHours = task.estimatedTime ? (task.estimatedTime / 3600).toFixed(1) : null;
+
+          const item = document.createElement('div');
+          item.className = 'project-task-item';
+
+          const info = document.createElement('div');
+          info.className = 'project-task-info';
+
+          const h4 = document.createElement('h4');
+          h4.textContent = task.title;
+
+          const meta = document.createElement('div');
+          meta.className = 'project-task-meta';
+          const statusIcon = task.completedDate ? '✅' : '🔄';
+          const status = task.completedDate ? 'Completata' : 'In corso';
+          const priority = `Priorità: ${task.priority}`;
+          const assignee = task.assignee ? ` · ${task.assignee}` : '';
+          meta.textContent = `${statusIcon} ${status} · ${priority}${assignee}`;
+
+          info.append(h4, meta);
+
+          const timeInfo = document.createElement('div');
+          timeInfo.className = 'project-task-time';
+
+          const hours = document.createElement('div');
+          hours.className = 'hours';
+          hours.textContent = `${taskHours}h`;
+
+          const label = document.createElement('div');
+          label.className = 'label';
+          if (estimatedHours) {
+            label.textContent = `Stimato: ${estimatedHours}h`;
+          } else {
+            label.textContent = 'Tempo registrato';
+          }
+
+          timeInfo.append(hours, label);
+
+          item.append(info, timeInfo);
+          tasksList.appendChild(item);
+        });
+    }
+
+    tasksSection.append(tasksTitle, tasksList);
+
+    body.innerHTML = '';
+    body.append(summary, tasksSection);
+
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeProjectModal() {
+    const modal = $('#projectModal');
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
   }
 
   let charts = { donut:null, line:null, bar:null, timeByProject:null, timeByPriority:null };
@@ -1232,6 +1474,9 @@ function renderStats(root) {
     saveTimeEntry(taskId, entryData);
     closeTimeModal();
   });
+
+  // Project Modal
+  $('#projectModalClose').addEventListener('click', closeProjectModal);
 
   // ==============================
   //  EVENT LISTENERS (UI)
