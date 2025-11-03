@@ -149,6 +149,35 @@
 
     /* Footer note */
     footer { text-align: center; color: var(--gray-500); font-size: var(--text-xs); margin: 24px 0 10px; }
+
+    /* Time Tracking Styles */
+    .time-section { border-top: 1px solid var(--gray-200); padding-top: 10px; margin-top: 10px; }
+    .time-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .time-stats { display: flex; gap: 12px; font-size: var(--text-sm); color: var(--gray-700); flex-wrap: wrap; }
+    .time-stat-item { display: flex; align-items: center; gap: 4px; }
+    .time-badge { background: var(--gray-100); padding: 2px 6px; border-radius: var(--radius-sm); font-weight: 600; }
+    .time-badge.over { background: var(--danger); color: white; }
+    .timer-display { font-size: var(--text-xl); font-weight: 700; color: var(--primary); font-family: 'Courier New', monospace; }
+    .timer-display.running { color: var(--success); animation: pulse 2s infinite; }
+    .timer-controls { display: flex; gap: 6px; margin-top: 8px; }
+    .btn.timer { padding: 6px 10px; font-size: var(--text-xs); }
+    .btn.timer.start { background: var(--success); color: white; border-color: var(--success); }
+    .btn.timer.stop { background: var(--danger); color: white; border-color: var(--danger); }
+    .btn.timer.pause { background: var(--warning); color: white; border-color: var(--warning); }
+
+    /* Timesheet table */
+    .timesheet-table { width: 100%; border-collapse: collapse; background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden; }
+    .timesheet-table th, .timesheet-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--gray-200); font-size: var(--text-sm); }
+    .timesheet-table th { background: var(--gray-100); font-weight: 600; color: var(--gray-700); }
+    .timesheet-table tr:hover { background: var(--gray-50); }
+    .timesheet-filters { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 16px; }
+    @media (max-width: 768px) { .timesheet-filters { grid-template-columns: 1fr; } }
+    .time-entry-desc { color: var(--gray-700); font-style: italic; }
+    .duration-badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: var(--radius-full); font-weight: 600; font-size: var(--text-xs); }
+
+    /* Time entry modal */
+    .time-modal-grid { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+    .time-modal-grid .full { grid-column: 1 / -1; }
   
 /* --- Stats layout refinements --- */
 .charts-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
@@ -196,6 +225,7 @@
       <button class="tab active" data-tab="tutte" role="tab">🔋 Tutte</button>
       <button class="tab" data-tab="critiche" role="tab">🚨 Critiche</button>
       <button class="tab" data-tab="completate" role="tab">✅ Completate</button>
+      <button class="tab" data-tab="timesheet" role="tab">⏱️ Timesheet</button>
       <button class="tab" data-tab="statistiche" role="tab">📊 Statistiche</button>
       <button class="tab" data-tab="impostazioni" role="tab">⚙️ Impostazioni</button>
     </nav>
@@ -236,7 +266,7 @@
     <!-- Content -->
     <main id="content" aria-live="polite"></main>
 
-    <footer>Standalone HTML – nessuna build. Nota: PWA/Service Worker non inclusi in singolo file.</footer>
+    <footer>Standalone HTML con Time Tracking – nessuna build. Nota: PWA/Service Worker non inclusi in singolo file.</footer>
   </div>
 
   <!-- MODAL: Task Form -->
@@ -280,6 +310,11 @@
               <label for="dueDate">Scadenza</label>
               <input id="dueDate" type="date" />
             </div>
+            <div class="field">
+              <label for="estimatedTime">Tempo stimato (ore)</label>
+              <input id="estimatedTime" type="number" min="0" step="0.5" placeholder="es. 2.5" />
+              <div class="help">Opzionale</div>
+            </div>
             <div class="field full">
               <label for="notes">Note</label>
               <textarea id="notes" rows="3" placeholder="Dettagli, link, checklist…"></textarea>
@@ -288,6 +323,44 @@
           <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:14px;">
             <button type="button" class="btn" id="btnAnnulla">Annulla</button>
             <button type="submit" class="btn primary" id="btnSalva">Salva</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Time Entry -->
+  <div id="timeModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document">
+      <header>
+        <div id="timeModalTitle" class="title" style="font-size:1.1rem">⏱️ Aggiungi Sessione</div>
+        <button id="timeModalClose" class="btn">✖</button>
+      </header>
+      <div class="content">
+        <form id="timeEntryForm" autocomplete="off">
+          <input type="hidden" id="entryTaskId" />
+          <input type="hidden" id="entryId" />
+          <div class="time-modal-grid">
+            <div class="field">
+              <label for="entryDate">Data</label>
+              <input id="entryDate" type="date" required />
+            </div>
+            <div class="field">
+              <label for="entryDuration">Durata (ore)</label>
+              <input id="entryDuration" type="number" min="0" step="0.25" placeholder="es. 1.5" required />
+            </div>
+            <div class="field full">
+              <label for="entryDescription">Descrizione attività <span style="color:var(--danger)">*</span></label>
+              <input id="entryDescription" required placeholder="Cosa hai fatto in questa sessione?" />
+            </div>
+            <div class="field full">
+              <label for="entryNotes">Note (opzionale)</label>
+              <textarea id="entryNotes" rows="2" placeholder="Note aggiuntive…"></textarea>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:14px;">
+            <button type="button" class="btn" id="btnTimeCancel">Annulla</button>
+            <button type="submit" class="btn primary" id="btnTimeSave">Salva</button>
           </div>
         </form>
       </div>
@@ -328,9 +401,12 @@
    *  completedTasks: Task[],
    *  projects: string[],
    *  people: string[],
-   *  tab: 'tutte'|'critiche'|'completate'|'statistiche'|'impostazioni',
+   *  tab: 'tutte'|'critiche'|'completate'|'statistiche'|'impostazioni'|'timesheet',
    *  filters: { priority: 'all'|'bassa'|'media'|'alta'|'critica', due: 'all'|'overdue'|'today'|'next7'|'nodue' },
-   *  q: string
+   *  q: string,
+   *  activeTimerId: number|null,
+   *  roundingMinutes: number,
+   *  weeklyGoalHours: number
    * }} */
   const state = {
     tasks: [],
@@ -339,15 +415,26 @@
     people: [...defaultPeoples],
     tab: 'tutte',
     filters: { priority: 'all', due: 'all' },
-    q: ''
+    q: '',
+    activeTimerId: null,
+    roundingMinutes: 0, // 0 = no rounding, 5, 10, 15
+    weeklyGoalHours: 40
   };
 
   let saveTimer = null;
+  let timerInterval = null;
 
   function save() {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
-      const payload = { tasks: state.tasks, completedTasks: state.completedTasks, projects: state.projects, people: state.people };
+      const payload = {
+        tasks: state.tasks,
+        completedTasks: state.completedTasks,
+        projects: state.projects,
+        people: state.people,
+        roundingMinutes: state.roundingMinutes,
+        weeklyGoalHours: state.weeklyGoalHours
+      };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     }, SAVE_DEBOUNCE_MS);
   }
@@ -361,6 +448,15 @@
         state.completedTasks = Array.isArray(data.completedTasks) ? data.completedTasks : [];
         state.projects = Array.isArray(data.projects) && data.projects.length ? data.projects : [...defaultProjects];
         state.people = Array.isArray(data.people) && data.people.length ? data.people : [...defaultPeoples];
+        state.roundingMinutes = data.roundingMinutes || 0;
+        state.weeklyGoalHours = data.weeklyGoalHours || 40;
+
+        // Ensure all tasks have time tracking fields
+        [...state.tasks, ...state.completedTasks].forEach(t => {
+          if (!t.timeEntries) t.timeEntries = [];
+          if (t.estimatedTime === undefined) t.estimatedTime = 0;
+          if (t.activeTimer === undefined) t.activeTimer = null;
+        });
       } catch (e) {
         console.warn('Dati corrotti, avvio con default.');
       }
@@ -460,6 +556,8 @@
       renderTaskList(mount, applyFilters(list));
     } else if (state.tab === 'completate') {
       renderCompleted(mount);
+    } else if (state.tab === 'timesheet') {
+      renderTimesheet(mount);
     } else if (state.tab === 'statistiche') {
       renderStats(mount);
     } else if (state.tab === 'impostazioni') {
@@ -517,8 +615,73 @@
     const bComplete = btn('✅ Completa', () => onComplete(task.id), 'success');
     controls.append(bPlus, bMinus, bComplete);
 
-    card.append(header, h3, meta, notes, progress, controls);
+    // Time tracking section
+    const timeSection = createTimeSection(task);
+
+    card.append(header, h3, meta, notes, progress, controls, timeSection);
     return card;
+  }
+
+  function createTimeSection(task) {
+    const section = document.createElement('div');
+    section.className = 'time-section';
+
+    const timeHeader = document.createElement('div');
+    timeHeader.className = 'time-header';
+    timeHeader.innerHTML = '<strong>🕒 Tempo</strong>';
+
+    const timeStats = document.createElement('div');
+    timeStats.className = 'time-stats';
+
+    // Calculate total time
+    const totalSeconds = (task.timeEntries || []).reduce((sum, e) => sum + (e.duration || 0), 0);
+    const totalHours = (totalSeconds / 3600).toFixed(2);
+    const estimatedHours = task.estimatedTime ? (task.estimatedTime / 3600).toFixed(2) : 0;
+
+    const statLogged = document.createElement('div');
+    statLogged.className = 'time-stat-item';
+    statLogged.innerHTML = `📝 Registrato: <span class="time-badge">${totalHours}h</span>`;
+
+    const statEstimated = document.createElement('div');
+    statEstimated.className = 'time-stat-item';
+    if (task.estimatedTime) {
+      const isOver = totalSeconds > task.estimatedTime;
+      statEstimated.innerHTML = `🎯 Stimato: <span class="time-badge ${isOver?'over':''}">${estimatedHours}h</span>`;
+    } else {
+      statEstimated.innerHTML = `🎯 Stimato: <span class="time-badge">—</span>`;
+    }
+
+    timeStats.append(statLogged, statEstimated);
+
+    // Timer display
+    const timerDisplay = document.createElement('div');
+    timerDisplay.className = 'timer-display';
+    timerDisplay.id = `timer-${task.id}`;
+    if (task.activeTimer) {
+      const elapsed = Math.floor((Date.now() - new Date(task.activeTimer.start).getTime()) / 1000);
+      timerDisplay.textContent = formatDuration(elapsed);
+      timerDisplay.classList.add('running');
+    } else {
+      timerDisplay.textContent = '00:00:00';
+    }
+
+    // Timer controls
+    const timerControls = document.createElement('div');
+    timerControls.className = 'timer-controls';
+
+    if (task.activeTimer) {
+      const bStop = btn('⏹️ Stop', () => stopTimer(task.id), 'timer stop');
+      timerControls.append(bStop);
+    } else {
+      const bStart = btn('▶️ Start', () => startTimer(task.id), 'timer start');
+      timerControls.append(bStart);
+    }
+
+    const bManual = btn('➕ Manuale', () => openTimeModal(task.id));
+    timerControls.append(bManual);
+
+    section.append(timeHeader, timeStats, timerDisplay, timerControls);
+    return section;
   }
 
   function renderCompleted(root) {
@@ -542,11 +705,11 @@
     root.appendChild(list);
   }
 
-  let charts = { donut:null, line:null, bar:null };
-  
+  let charts = { donut:null, line:null, bar:null, timeByProject:null, timeByPriority:null };
+
 function renderStats(root) {
     const wrap = document.createElement('div');
-    wrap.style.display='grid'; 
+    wrap.style.display='grid';
     wrap.style.gap='16px';
 
     // quick metrics
@@ -555,12 +718,38 @@ function renderStats(root) {
     const done = state.completedTasks.length;
     const criticalOpen = state.tasks.filter(t=>t.priority==='critica').length;
 
+    // Calculate time metrics
+    const allTasks = [...state.tasks, ...state.completedTasks];
+    const totalTimeSeconds = allTasks.reduce((sum, t) => {
+      return sum + (t.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
+    }, 0);
+    const totalTimeHours = (totalTimeSeconds / 3600).toFixed(1);
+
+    const now = new Date();
+    const thisWeekStart = new Date(now);
+    thisWeekStart.setDate(now.getDate() - now.getDay());
+    thisWeekStart.setHours(0, 0, 0, 0);
+
+    const weekTimeSeconds = allTasks.reduce((sum, t) => {
+      return sum + (t.timeEntries || []).reduce((s, e) => {
+        const entryDate = new Date(e.start);
+        return entryDate >= thisWeekStart ? s + (e.duration || 0) : s;
+      }, 0);
+    }, 0);
+    const weekTimeHours = (weekTimeSeconds / 3600).toFixed(1);
+
     wrap.innerHTML = `
       <div class="stats">
         <div class="stat"><div class="label">Totale</div><div class="value">${total}</div></div>
         <div class="stat"><div class="label">In corso</div><div class="value">${opened}</div></div>
         <div class="stat"><div class="label">Completate</div><div class="value">${done}</div></div>
         <div class="stat"><div class="label">Critiche aperte</div><div class="value">${criticalOpen}</div></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="label">⏱️ Ore totali</div><div class="value">${totalTimeHours}h</div></div>
+        <div class="stat"><div class="label">⏱️ Ore settimana</div><div class="value">${weekTimeHours}h</div></div>
+        <div class="stat"><div class="label">⏱️ Media/task</div><div class="value">${total > 0 ? (totalTimeSeconds / total / 3600).toFixed(1) : 0}h</div></div>
+        <div class="stat"><div class="label">⏱️ Obiettivo sett.</div><div class="value">${state.weeklyGoalHours}h</div></div>
       </div>
 
       <div class="charts-grid">
@@ -605,6 +794,39 @@ function renderStats(root) {
               rows.push(`<tr><th>Totale (14g)</th><td>${total14}</td></tr>`);
               return rows.join('');
             })()}
+          </table>
+        </div>
+
+        <div class="chart-box">
+          <h4>⏱️ Tempo per progetto (ore)</h4>
+          <div class="chart-container"><canvas id="chTimeByProject" class="stats-canvas"></canvas></div>
+          <table class="stats-table" aria-label="Tabella tempo per progetto">
+            ${(() => {
+              const timeByProject = {};
+              allTasks.forEach(t => {
+                const proj = t.project || 'Senza progetto';
+                const time = (t.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
+                timeByProject[proj] = (timeByProject[proj] || 0) + time;
+              });
+              return Object.entries(timeByProject)
+                .sort((a, b) => b[1] - a[1])
+                .map(([proj, secs]) => `<tr><th>${proj}</th><td>${(secs / 3600).toFixed(1)}h</td></tr>`)
+                .join('');
+            })()}
+          </table>
+        </div>
+
+        <div class="chart-box">
+          <h4>⏱️ Tempo per priorità (ore)</h4>
+          <div class="chart-container"><canvas id="chTimeByPriority" class="stats-canvas"></canvas></div>
+          <table class="stats-table" aria-label="Tabella tempo per priorità">
+            ${['critica', 'alta', 'media', 'bassa'].map(p => {
+              const time = allTasks
+                .filter(t => t.priority === p)
+                .reduce((sum, t) => sum + (t.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0), 0);
+              const label = p.charAt(0).toUpperCase() + p.slice(1);
+              return `<tr><th>${label}</th><td>${(time / 3600).toFixed(1)}h</td></tr>`;
+            }).join('')}
           </table>
         </div>
       </div>
@@ -654,10 +876,59 @@ function renderStats(root) {
     charts.bar = new Chart(ctx3, {
       type: 'bar',
       data: { labels: prios.map(p=>p.toUpperCase()), datasets: [{ label:'Aperte', data: counts, backgroundColor: ['#dc2626','#f97316','#facc15','#22c55e'] }] },
-      options: { 
+      options: {
         maintainAspectRatio: false,
-        plugins: { legend: { display:false } }, 
+        plugins: { legend: { display:false } },
         scales: { y: { beginAtZero:true, precision:0 } },
+        animation: false
+      }
+    });
+
+    // Time by project
+    const timeByProject = {};
+    allTasks.forEach(t => {
+      const proj = t.project || 'Senza progetto';
+      const time = (t.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
+      timeByProject[proj] = (timeByProject[proj] || 0) + time;
+    });
+    const projectLabels = Object.keys(timeByProject).sort((a, b) => timeByProject[b] - timeByProject[a]).slice(0, 8);
+    const projectHours = projectLabels.map(p => (timeByProject[p] / 3600).toFixed(1));
+
+    const ctx4 = document.getElementById('chTimeByProject').getContext('2d');
+    charts.timeByProject && charts.timeByProject.destroy();
+    charts.timeByProject = new Chart(ctx4, {
+      type: 'bar',
+      data: {
+        labels: projectLabels,
+        datasets: [{ label: 'Ore', data: projectHours, backgroundColor: '#1d4ed8' }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } },
+        animation: false
+      }
+    });
+
+    // Time by priority
+    const timeBypriority = prios.map(p => {
+      const time = allTasks
+        .filter(t => t.priority === p)
+        .reduce((sum, t) => sum + (t.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0), 0);
+      return (time / 3600).toFixed(1);
+    });
+
+    const ctx5 = document.getElementById('chTimeByPriority').getContext('2d');
+    charts.timeByPriority && charts.timeByPriority.destroy();
+    charts.timeByPriority = new Chart(ctx5, {
+      type: 'doughnut',
+      data: {
+        labels: prios.map(p => p.toUpperCase()),
+        datasets: [{ data: timeBypriority, backgroundColor: ['#dc2626','#f97316','#facc15','#22c55e'] }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
         animation: false
       }
     });
@@ -686,7 +957,50 @@ function renderStats(root) {
     addPeWrap.append(inpPe, addPe);
     cardPe.append(listPe, addPeWrap);
 
-    grid.append(cardP, cardPe);
+    // Time Tracking Settings
+    const cardTime = document.createElement('div'); cardTime.className='settings-card';
+    cardTime.innerHTML = `<h4>⏱️ Impostazioni Tempo</h4>`;
+    const timeContent = document.createElement('div');
+    timeContent.style.display = 'grid';
+    timeContent.style.gap = '12px';
+
+    const roundingDiv = document.createElement('div');
+    roundingDiv.className = 'field';
+    const roundingLabel = document.createElement('label');
+    roundingLabel.textContent = 'Arrotondamento (minuti)';
+    const roundingSelect = document.createElement('select');
+    roundingSelect.innerHTML = `
+      <option value="0" ${state.roundingMinutes === 0 ? 'selected' : ''}>Nessuno</option>
+      <option value="5" ${state.roundingMinutes === 5 ? 'selected' : ''}>5 minuti</option>
+      <option value="10" ${state.roundingMinutes === 10 ? 'selected' : ''}>10 minuti</option>
+      <option value="15" ${state.roundingMinutes === 15 ? 'selected' : ''}>15 minuti</option>
+    `;
+    roundingSelect.addEventListener('change', (e) => {
+      state.roundingMinutes = parseInt(e.target.value, 10);
+      save();
+    });
+    roundingDiv.append(roundingLabel, roundingSelect);
+
+    const goalDiv = document.createElement('div');
+    goalDiv.className = 'field';
+    const goalLabel = document.createElement('label');
+    goalLabel.textContent = 'Obiettivo settimanale (ore)';
+    const goalInput = document.createElement('input');
+    goalInput.type = 'number';
+    goalInput.min = '0';
+    goalInput.step = '1';
+    goalInput.value = String(state.weeklyGoalHours);
+    goalInput.addEventListener('change', (e) => {
+      state.weeklyGoalHours = parseInt(e.target.value, 10) || 40;
+      save();
+      render();
+    });
+    goalDiv.append(goalLabel, goalInput);
+
+    timeContent.append(roundingDiv, goalDiv);
+    cardTime.appendChild(timeContent);
+
+    grid.append(cardP, cardPe, cardTime);
     root.appendChild(grid);
   }
 
@@ -707,6 +1021,9 @@ function renderStats(root) {
       progress: clamp(parseInt(partial.progress||0,10), 0, 100),
       dueDate: partial.dueDate || null,
       notes: partial.notes || '',
+      estimatedTime: partial.estimatedTime ? parseFloat(partial.estimatedTime) * 3600 : 0, // hours to seconds
+      timeEntries: [],
+      activeTimer: null
     };
     state.tasks.push(t); save(); render();
   }
@@ -714,6 +1031,9 @@ function renderStats(root) {
   function updateTask(id, updates) {
     const t = state.tasks.find(x => x.id === id);
     if (!t) return;
+    if (updates.estimatedTime !== undefined) {
+      updates.estimatedTime = parseFloat(updates.estimatedTime) * 3600; // hours to seconds
+    }
     Object.assign(t, updates);
     t.progress = clamp(parseInt(t.progress||0,10), 0, 100);
     save(); render();
@@ -852,6 +1172,7 @@ function renderStats(root) {
       f.priority.value = task.priority || 'bassa';
       f.progress.value = String(task.progress||0);
       f.dueDate.value = task.dueDate || '';
+      $('#estimatedTime').value = task.estimatedTime ? (task.estimatedTime / 3600).toFixed(1) : '';
       f.notes.value = task.notes || '';
     } else {
       modalTitle.textContent = '➕ Nuova attività';
@@ -862,6 +1183,7 @@ function renderStats(root) {
       f.priority.value = 'bassa';
       f.progress.value = '0';
       f.dueDate.value = '';
+      $('#estimatedTime').value = '';
       f.notes.value = '';
     }
     setTimeout(() => f.title.focus(), 0);
@@ -880,11 +1202,35 @@ function renderStats(root) {
       priority: f.priority.value,
       progress: parseInt(f.progress.value||'0',10),
       dueDate: f.dueDate.value || null,
+      estimatedTime: $('#estimatedTime').value || 0,
       notes: f.notes.value
     };
     const id = f.id.value ? parseInt(f.id.value,10) : null;
     if (id) updateTask(id, payload); else addTask(payload);
     closeModal();
+  });
+
+  // Time Entry Modal
+  $('#timeModalClose').addEventListener('click', closeTimeModal);
+  $('#btnTimeCancel').addEventListener('click', (e) => { e.preventDefault(); closeTimeModal(); });
+  $('#timeEntryForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const taskId = parseInt($('#entryTaskId').value, 10);
+    const entryId = $('#entryId').value ? parseInt($('#entryId').value, 10) : null;
+    const entryData = {
+      id: entryId,
+      date: $('#entryDate').value,
+      duration: $('#entryDuration').value,
+      description: $('#entryDescription').value.trim(),
+      notes: $('#entryNotes').value.trim()
+    };
+    if (!entryData.description) {
+      alert('La descrizione è obbligatoria');
+      $('#entryDescription').focus();
+      return;
+    }
+    saveTimeEntry(taskId, entryData);
+    closeTimeModal();
   });
 
   // ==============================
@@ -910,6 +1256,324 @@ function renderStats(root) {
   $('#fPrio').addEventListener('change', (e)=> setFilters({ priority: e.target.value }));
   $('#fDue').addEventListener('change', (e)=> setFilters({ due: e.target.value }));
   $('#btnPulisciFiltri').addEventListener('click', clearFilters);
+
+  // ==============================
+  //  TIME TRACKING FUNCTIONS
+  // ==============================
+  function formatDuration(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function startTimer(taskId) {
+    // Stop any active timer first
+    if (state.activeTimerId && state.activeTimerId !== taskId) {
+      stopTimer(state.activeTimerId);
+    }
+
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    task.activeTimer = { start: new Date().toISOString() };
+    state.activeTimerId = taskId;
+
+    // Start interval to update display
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      const el = $(`#timer-${taskId}`);
+      if (el && task.activeTimer) {
+        const elapsed = Math.floor((Date.now() - new Date(task.activeTimer.start).getTime()) / 1000);
+        el.textContent = formatDuration(elapsed);
+      }
+    }, 1000);
+
+    save();
+    render();
+  }
+
+  function stopTimer(taskId) {
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task || !task.activeTimer) return;
+
+    const start = new Date(task.activeTimer.start);
+    const end = new Date();
+    const duration = Math.floor((end - start) / 1000);
+
+    // Apply rounding if enabled
+    let finalDuration = duration;
+    if (state.roundingMinutes > 0) {
+      const roundSeconds = state.roundingMinutes * 60;
+      finalDuration = Math.ceil(duration / roundSeconds) * roundSeconds;
+    }
+
+    // Prompt for description
+    const description = prompt('Descrizione attività svolta:', '');
+    if (description === null) {
+      // User cancelled
+      task.activeTimer = null;
+      state.activeTimerId = null;
+      if (timerInterval) clearInterval(timerInterval);
+      save();
+      render();
+      return;
+    }
+
+    // Create time entry
+    const entry = {
+      id: genId(),
+      start: task.activeTimer.start,
+      end: end.toISOString(),
+      duration: finalDuration,
+      description: description.trim() || 'Sessione di lavoro',
+      notes: ''
+    };
+
+    if (!task.timeEntries) task.timeEntries = [];
+    task.timeEntries.push(entry);
+
+    task.activeTimer = null;
+    state.activeTimerId = null;
+
+    if (timerInterval) clearInterval(timerInterval);
+
+    save();
+    render();
+  }
+
+  function openTimeModal(taskId, entryId = null) {
+    const timeModal = $('#timeModal');
+    const task = state.tasks.find(t => t.id === taskId) || state.completedTasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    timeModal.classList.add('open');
+    timeModal.setAttribute('aria-hidden', 'false');
+
+    $('#entryTaskId').value = String(taskId);
+
+    if (entryId) {
+      // Edit mode
+      const entry = (task.timeEntries || []).find(e => e.id === entryId);
+      if (!entry) return;
+
+      $('#timeModalTitle').textContent = '✏️ Modifica Sessione';
+      $('#entryId').value = String(entryId);
+      $('#entryDate').value = entry.start.slice(0, 10);
+      $('#entryDuration').value = (entry.duration / 3600).toFixed(2);
+      $('#entryDescription').value = entry.description || '';
+      $('#entryNotes').value = entry.notes || '';
+    } else {
+      // New mode
+      $('#timeModalTitle').textContent = '➕ Aggiungi Sessione';
+      $('#entryId').value = '';
+      $('#entryDate').value = todayISO();
+      $('#entryDuration').value = '';
+      $('#entryDescription').value = '';
+      $('#entryNotes').value = '';
+    }
+
+    setTimeout(() => $('#entryDuration').focus(), 0);
+  }
+
+  function closeTimeModal() {
+    const timeModal = $('#timeModal');
+    timeModal.classList.remove('open');
+    timeModal.setAttribute('aria-hidden', 'true');
+  }
+
+  function saveTimeEntry(taskId, entryData) {
+    const task = state.tasks.find(t => t.id === taskId) || state.completedTasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    if (!task.timeEntries) task.timeEntries = [];
+
+    const duration = parseFloat(entryData.duration) * 3600; // hours to seconds
+    const startISO = entryData.date + 'T12:00:00'; // midday
+
+    if (entryData.id) {
+      // Update existing
+      const entry = task.timeEntries.find(e => e.id === entryData.id);
+      if (entry) {
+        entry.start = startISO;
+        entry.duration = duration;
+        entry.description = entryData.description;
+        entry.notes = entryData.notes;
+      }
+    } else {
+      // Create new
+      const entry = {
+        id: genId(),
+        start: startISO,
+        end: startISO,
+        duration: duration,
+        description: entryData.description,
+        notes: entryData.notes
+      };
+      task.timeEntries.push(entry);
+    }
+
+    save();
+    render();
+  }
+
+  function deleteTimeEntry(taskId, entryId) {
+    const task = state.tasks.find(t => t.id === taskId) || state.completedTasks.find(t => t.id === taskId);
+    if (!task || !task.timeEntries) return;
+
+    if (confirm('Eliminare questa sessione?')) {
+      task.timeEntries = task.timeEntries.filter(e => e.id !== entryId);
+      save();
+      render();
+    }
+  }
+
+  function renderTimesheet(root) {
+    const wrap = document.createElement('div');
+
+    // Filters
+    const filters = document.createElement('div');
+    filters.className = 'timesheet-filters';
+    filters.innerHTML = `
+      <div class="field">
+        <label for="tsDateRange">Periodo</label>
+        <select id="tsDateRange">
+          <option value="all">Tutto</option>
+          <option value="today">Oggi</option>
+          <option value="week" selected>Questa settimana</option>
+          <option value="month">Questo mese</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="tsProject">Progetto</label>
+        <select id="tsProject">
+          <option value="all">Tutti</option>
+          ${state.projects.map(p => `<option value="${p}">${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label for="tsTask">Task</label>
+        <select id="tsTask">
+          <option value="all">Tutte</option>
+          ${[...state.tasks, ...state.completedTasks].map(t => `<option value="${t.id}">${t.title}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <button id="btnExportCSV" class="btn">📥 Esporta CSV</button>
+      </div>
+    `;
+
+    // Collect all time entries
+    const allEntries = [];
+    [...state.tasks, ...state.completedTasks].forEach(task => {
+      if (task.timeEntries && task.timeEntries.length) {
+        task.timeEntries.forEach(entry => {
+          allEntries.push({ ...entry, task });
+        });
+      }
+    });
+
+    // Sort by date desc
+    allEntries.sort((a, b) => b.start.localeCompare(a.start));
+
+    // Build table
+    const table = document.createElement('table');
+    table.className = 'timesheet-table';
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Task</th>
+          <th>Progetto</th>
+          <th>Descrizione</th>
+          <th>Durata</th>
+          <th>Azioni</th>
+        </tr>
+      </thead>
+      <tbody id="timesheetBody"></tbody>
+    `;
+
+    const tbody = table.querySelector('#timesheetBody');
+
+    if (allEntries.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--gray-500);">Nessuna sessione registrata</td></tr>';
+    } else {
+      allEntries.forEach(entry => {
+        const row = document.createElement('tr');
+        const dateStr = new Date(entry.start).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const durationHours = (entry.duration / 3600).toFixed(2);
+
+        row.innerHTML = `
+          <td>${dateStr}</td>
+          <td><strong>${entry.task.title}</strong></td>
+          <td>${entry.task.project || '—'}</td>
+          <td><span class="time-entry-desc">${entry.description}</span></td>
+          <td><span class="duration-badge">${durationHours}h</span></td>
+          <td>
+            <button class="btn btn-edit-entry" data-task-id="${entry.task.id}" data-entry-id="${entry.id}" title="Modifica">✏️</button>
+            <button class="btn danger btn-delete-entry" data-task-id="${entry.task.id}" data-entry-id="${entry.id}" title="Elimina">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Summary
+    const totalSeconds = allEntries.reduce((sum, e) => sum + e.duration, 0);
+    const totalHours = (totalSeconds / 3600).toFixed(2);
+
+    const summary = document.createElement('div');
+    summary.style.cssText = 'margin-top:16px; padding:16px; background:white; border:1px solid var(--gray-200); border-radius:var(--radius-lg); display:flex; gap:24px;';
+    summary.innerHTML = `
+      <div><strong>Totale sessioni:</strong> ${allEntries.length}</div>
+      <div><strong>Ore totali:</strong> ${totalHours}h</div>
+      <div><strong>Media per sessione:</strong> ${allEntries.length > 0 ? ((totalSeconds / allEntries.length) / 3600).toFixed(2) : 0}h</div>
+    `;
+
+    wrap.append(filters, table, summary);
+    root.appendChild(wrap);
+
+    // Event listener for CSV export
+    $('#btnExportCSV').addEventListener('click', () => exportTimesheetCSV(allEntries));
+
+    // Filter listeners (basic implementation, could be enhanced)
+    $('#tsDateRange').addEventListener('change', () => render());
+    $('#tsProject').addEventListener('change', () => render());
+    $('#tsTask').addEventListener('change', () => render());
+
+    // Event delegation for edit/delete buttons
+    tbody.addEventListener('click', (e) => {
+      const target = e.target.closest('.btn-edit-entry, .btn-delete-entry');
+      if (!target) return;
+
+      const taskId = parseInt(target.dataset.taskId, 10);
+      const entryId = parseInt(target.dataset.entryId, 10);
+
+      if (target.classList.contains('btn-edit-entry')) {
+        openTimeModal(taskId, entryId);
+      } else if (target.classList.contains('btn-delete-entry')) {
+        deleteTimeEntry(taskId, entryId);
+      }
+    });
+  }
+
+  function exportTimesheetCSV(entries) {
+    const headers = ['Data', 'Task', 'Progetto', 'Assegnatario', 'Descrizione', 'Durata (ore)', 'Note'];
+    const rows = entries.map(e => {
+      const date = new Date(e.start).toLocaleDateString('it-IT');
+      const hours = (e.duration / 3600).toFixed(2);
+      return [date, e.task.title, e.task.project || '', e.task.assignee || '', e.description, hours, e.notes || ''];
+    });
+
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `timesheet_${todayISO()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   // ==============================
   //  HELPERS
