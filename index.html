@@ -254,7 +254,7 @@
       <button class="tab active" data-tab="tutte" role="tab">🔋 Tutte</button>
       <button class="tab" data-tab="critiche" role="tab">🚨 Critiche</button>
       <button class="tab" data-tab="completate" role="tab">✅ Completate</button>
-      <button class="tab" data-tab="progetti" role="tab">📂 Progetti</button>
+      <button class="tab" data-tab="attivita" role="tab">📋 Riepilogo Attività</button>
       <button class="tab" data-tab="timesheet" role="tab">⏱️ Timesheet</button>
       <button class="tab" data-tab="statistiche" role="tab">📊 Statistiche</button>
       <button class="tab" data-tab="impostazioni" role="tab">⚙️ Impostazioni</button>
@@ -397,11 +397,11 @@
     </div>
   </div>
 
-  <!-- MODAL: Project Detail -->
+  <!-- MODAL: Activity Detail -->
   <div id="projectModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal" role="document" style="max-width: 800px;">
       <header>
-        <div id="projectModalTitle" class="title" style="font-size:1.1rem">📂 Dettaglio Progetto</div>
+        <div id="projectModalTitle" class="title" style="font-size:1.1rem">📋 Dettaglio Attività</div>
         <button id="projectModalClose" class="btn">✖</button>
       </header>
       <div class="content project-modal-content">
@@ -444,7 +444,7 @@
    *  completedTasks: Task[],
    *  projects: string[],
    *  people: string[],
-   *  tab: 'tutte'|'critiche'|'completate'|'statistiche'|'impostazioni'|'timesheet'|'progetti',
+   *  tab: 'tutte'|'critiche'|'completate'|'statistiche'|'impostazioni'|'timesheet'|'attivita',
    *  filters: { priority: 'all'|'bassa'|'media'|'alta'|'critica', due: 'all'|'overdue'|'today'|'next7'|'nodue' },
    *  q: string,
    *  activeTimerId: number|null,
@@ -599,8 +599,8 @@
       renderTaskList(mount, applyFilters(list));
     } else if (state.tab === 'completate') {
       renderCompleted(mount);
-    } else if (state.tab === 'progetti') {
-      renderProjects(mount);
+    } else if (state.tab === 'attivita') {
+      renderActivities(mount);
     } else if (state.tab === 'timesheet') {
       renderTimesheet(mount);
     } else if (state.tab === 'statistiche') {
@@ -750,146 +750,139 @@
     root.appendChild(list);
   }
 
-  function renderProjects(root) {
+  function renderActivities(root) {
     const allTasks = [...state.tasks, ...state.completedTasks];
 
-    // Calculate stats for each project
-    const projectStats = {};
-    state.projects.forEach(project => {
-      const tasks = allTasks.filter(t => t.project === project);
-      const openTasks = tasks.filter(t => !t.completedDate).length;
-      const completedTasks = tasks.filter(t => t.completedDate).length;
-      const totalTime = tasks.reduce((sum, t) => {
-        return sum + (t.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
-      }, 0);
-
-      projectStats[project] = {
-        totalTasks: tasks.length,
-        openTasks,
-        completedTasks,
-        totalTimeSeconds: totalTime,
-        totalTimeHours: (totalTime / 3600).toFixed(1),
-        tasks
-      };
-    });
-
-    // Also include tasks without project
-    const noProjectTasks = allTasks.filter(t => !t.project || t.project === '');
-    if (noProjectTasks.length > 0) {
-      const totalTime = noProjectTasks.reduce((sum, t) => {
-        return sum + (t.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
-      }, 0);
-
-      projectStats['Senza progetto'] = {
-        totalTasks: noProjectTasks.length,
-        openTasks: noProjectTasks.filter(t => !t.completedDate).length,
-        completedTasks: noProjectTasks.filter(t => t.completedDate).length,
-        totalTimeSeconds: totalTime,
-        totalTimeHours: (totalTime / 3600).toFixed(1),
-        tasks: noProjectTasks
-      };
-    }
-
-    if (Object.keys(projectStats).length === 0) {
+    if (allTasks.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'empty';
-      empty.textContent = 'Nessun progetto configurato. Vai in Impostazioni per aggiungerne.';
+      empty.textContent = 'Nessuna attività presente.';
       root.appendChild(empty);
       return;
     }
 
+    // Calculate time for each task
+    const tasksWithTime = allTasks.map(task => {
+      const totalTime = (task.timeEntries || []).reduce((sum, e) => sum + (e.duration || 0), 0);
+      return {
+        ...task,
+        totalTimeSeconds: totalTime,
+        totalTimeHours: (totalTime / 3600).toFixed(2)
+      };
+    });
+
+    // Sort by time spent (descending)
+    tasksWithTime.sort((a, b) => b.totalTimeSeconds - a.totalTimeSeconds);
+
     const grid = document.createElement('div');
-    grid.className = 'projects-grid';
+    grid.className = 'projects-grid'; // Riuso lo stesso stile
 
-    Object.entries(projectStats)
-      .sort((a, b) => b[1].totalTimeSeconds - a[1].totalTimeSeconds) // Sort by time desc
-      .forEach(([projectName, stats]) => {
-        const card = document.createElement('div');
-        card.className = 'project-card';
-        card.addEventListener('click', () => openProjectModal(projectName, stats));
+    tasksWithTime.forEach(task => {
+      const card = document.createElement('div');
+      card.className = 'project-card';
+      card.addEventListener('click', () => openActivityModal(task));
 
-        const h3 = document.createElement('h3');
-        h3.innerHTML = `📂 ${projectName}`;
+      const h3 = document.createElement('h3');
+      const statusIcon = task.completedDate ? '✅' : '🔄';
+      h3.innerHTML = `${statusIcon} ${task.title}`;
 
-        const statsGrid = document.createElement('div');
-        statsGrid.className = 'project-stats-grid';
+      const meta = document.createElement('div');
+      meta.style.cssText = 'font-size: var(--text-sm); color: var(--gray-700); margin-bottom: 12px;';
+      meta.innerHTML = `📂 ${task.project || 'Senza progetto'} · 👤 ${task.assignee || '—'}`;
 
-        statsGrid.innerHTML = `
-          <div class="project-stat">
-            <div class="project-stat-value">${stats.totalTasks}</div>
-            <div class="project-stat-label">Task Totali</div>
-          </div>
-          <div class="project-stat">
-            <div class="project-stat-value">${stats.openTasks}</div>
-            <div class="project-stat-label">In Corso</div>
-          </div>
-          <div class="project-stat">
-            <div class="project-stat-value">${stats.completedTasks}</div>
-            <div class="project-stat-label">Completate</div>
-          </div>
-          <div class="project-stat">
-            <div class="project-stat-value">${stats.totalTimeHours}h</div>
-            <div class="project-stat-label">Tempo Totale</div>
-          </div>
-        `;
+      const statsGrid = document.createElement('div');
+      statsGrid.className = 'project-stats-grid';
 
-        card.append(h3, statsGrid);
-        grid.appendChild(card);
-      });
+      const sessionCount = (task.timeEntries || []).length;
+      const estimatedHours = task.estimatedTime ? (task.estimatedTime / 3600).toFixed(1) : '—';
+      const prioLabel = task.priority.charAt(0).toUpperCase() + task.priority.slice(1);
+
+      statsGrid.innerHTML = `
+        <div class="project-stat">
+          <div class="project-stat-value">${task.totalTimeHours}h</div>
+          <div class="project-stat-label">Tempo Totale</div>
+        </div>
+        <div class="project-stat">
+          <div class="project-stat-value">${sessionCount}</div>
+          <div class="project-stat-label">Sessioni</div>
+        </div>
+        <div class="project-stat">
+          <div class="project-stat-value">${estimatedHours}h</div>
+          <div class="project-stat-label">Stimato</div>
+        </div>
+        <div class="project-stat">
+          <div class="project-stat-value">${prioLabel}</div>
+          <div class="project-stat-label">Priorità</div>
+        </div>
+      `;
+
+      card.append(h3, meta, statsGrid);
+      grid.appendChild(card);
+    });
 
     root.appendChild(grid);
   }
 
-  function openProjectModal(projectName, stats) {
+  function openActivityModal(task) {
     const modal = $('#projectModal');
     const body = $('#projectModalBody');
 
-    $('#projectModalTitle').textContent = `📂 ${projectName}`;
+    const statusIcon = task.completedDate ? '✅' : '🔄';
+    $('#projectModalTitle').textContent = `${statusIcon} ${task.title}`;
+
+    const totalTime = (task.timeEntries || []).reduce((sum, e) => sum + (e.duration || 0), 0);
+    const totalTimeHours = (totalTime / 3600).toFixed(2);
+    const estimatedHours = task.estimatedTime ? (task.estimatedTime / 3600).toFixed(1) : '—';
+    const sessionCount = (task.timeEntries || []).length;
 
     // Summary section
     const summary = document.createElement('div');
     summary.className = 'project-summary';
     summary.innerHTML = `
-      <h3>Riepilogo</h3>
+      <h3>Riepilogo Attività</h3>
+      <div style="margin-bottom: 12px; font-size: var(--text-sm); opacity: 0.9;">
+        📂 ${task.project || 'Senza progetto'} · 👤 ${task.assignee || '—'} · ⚡ Priorità: ${task.priority}
+      </div>
       <div class="project-summary-grid">
         <div class="project-summary-item">
-          <div class="project-summary-value">${stats.totalTasks}</div>
-          <div class="project-summary-label">Task</div>
-        </div>
-        <div class="project-summary-item">
-          <div class="project-summary-value">${stats.completedTasks}</div>
-          <div class="project-summary-label">Completate</div>
-        </div>
-        <div class="project-summary-item">
-          <div class="project-summary-value">${stats.totalTimeHours}h</div>
+          <div class="project-summary-value">${totalTimeHours}h</div>
           <div class="project-summary-label">Tempo Totale</div>
+        </div>
+        <div class="project-summary-item">
+          <div class="project-summary-value">${sessionCount}</div>
+          <div class="project-summary-label">Sessioni</div>
+        </div>
+        <div class="project-summary-item">
+          <div class="project-summary-value">${estimatedHours}h</div>
+          <div class="project-summary-label">Tempo Stimato</div>
         </div>
       </div>
     `;
 
-    // Tasks list
-    const tasksSection = document.createElement('div');
-    const tasksTitle = document.createElement('h4');
-    tasksTitle.textContent = 'Attività e Tempo Impiegato';
-    tasksTitle.style.marginBottom = '12px';
+    // Time entries list
+    const sessionsSection = document.createElement('div');
+    const sessionsTitle = document.createElement('h4');
+    sessionsTitle.textContent = 'Sessioni di Lavoro';
+    sessionsTitle.style.marginBottom = '12px';
 
-    const tasksList = document.createElement('div');
-    tasksList.className = 'project-task-list';
+    const sessionsList = document.createElement('div');
+    sessionsList.className = 'project-task-list';
 
-    if (stats.tasks.length === 0) {
-      tasksList.innerHTML = '<p style="text-align:center; color:var(--gray-500); padding:24px;">Nessuna attività in questo progetto</p>';
+    if (!task.timeEntries || task.timeEntries.length === 0) {
+      sessionsList.innerHTML = '<p style="text-align:center; color:var(--gray-500); padding:24px;">Nessuna sessione registrata per questa attività</p>';
     } else {
-      // Sort tasks by time spent desc
-      stats.tasks
-        .sort((a, b) => {
-          const timeA = (a.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
-          const timeB = (b.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
-          return timeB - timeA;
-        })
-        .forEach(task => {
-          const taskTime = (task.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
-          const taskHours = (taskTime / 3600).toFixed(2);
-          const estimatedHours = task.estimatedTime ? (task.estimatedTime / 3600).toFixed(1) : null;
+      // Sort sessions by date desc
+      [...task.timeEntries]
+        .sort((a, b) => b.start.localeCompare(a.start))
+        .forEach(entry => {
+          const entryHours = (entry.duration / 3600).toFixed(2);
+          const entryDate = new Date(entry.start);
+          const dateStr = entryDate.toLocaleDateString('it-IT', {
+            weekday: 'short',
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          });
 
           const item = document.createElement('div');
           item.className = 'project-task-item';
@@ -898,44 +891,43 @@
           info.className = 'project-task-info';
 
           const h4 = document.createElement('h4');
-          h4.textContent = task.title;
+          h4.textContent = entry.description || 'Sessione di lavoro';
 
           const meta = document.createElement('div');
           meta.className = 'project-task-meta';
-          const statusIcon = task.completedDate ? '✅' : '🔄';
-          const status = task.completedDate ? 'Completata' : 'In corso';
-          const priority = `Priorità: ${task.priority}`;
-          const assignee = task.assignee ? ` · ${task.assignee}` : '';
-          meta.textContent = `${statusIcon} ${status} · ${priority}${assignee}`;
+          meta.innerHTML = `📅 ${dateStr}`;
 
-          info.append(h4, meta);
+          if (entry.notes) {
+            const notes = document.createElement('div');
+            notes.style.cssText = 'font-size: var(--text-xs); color: var(--gray-600); margin-top: 4px; font-style: italic;';
+            notes.textContent = entry.notes;
+            info.append(h4, meta, notes);
+          } else {
+            info.append(h4, meta);
+          }
 
           const timeInfo = document.createElement('div');
           timeInfo.className = 'project-task-time';
 
           const hours = document.createElement('div');
           hours.className = 'hours';
-          hours.textContent = `${taskHours}h`;
+          hours.textContent = `${entryHours}h`;
 
           const label = document.createElement('div');
           label.className = 'label';
-          if (estimatedHours) {
-            label.textContent = `Stimato: ${estimatedHours}h`;
-          } else {
-            label.textContent = 'Tempo registrato';
-          }
+          label.textContent = 'Durata';
 
           timeInfo.append(hours, label);
 
           item.append(info, timeInfo);
-          tasksList.appendChild(item);
+          sessionsList.appendChild(item);
         });
     }
 
-    tasksSection.append(tasksTitle, tasksList);
+    sessionsSection.append(sessionsTitle, sessionsList);
 
     body.innerHTML = '';
-    body.append(summary, tasksSection);
+    body.append(summary, sessionsSection);
 
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
