@@ -111,6 +111,12 @@
 
     .progress { height: 8px; background: var(--gray-100); border-radius: var(--radius-full); overflow: hidden; margin: 6px 0 10px; border: 1px solid var(--gray-200); }
     .progress .fill { height: 100%; background: linear-gradient(90deg, var(--primary), #60a5fa); width: 0%; transition: width 0.2s ease; }
+    .progress .fill.over-budget { background: linear-gradient(90deg, var(--warning), var(--danger)); }
+    .progress .fill.complete { background: linear-gradient(90deg, var(--success), #4ade80); }
+    .progress-info { display: flex; justify-content: space-between; align-items: center; font-size: var(--text-xs); color: var(--gray-700); margin-bottom: 4px; }
+    .progress-label { font-weight: 600; }
+    .progress-percentage { font-weight: 700; }
+    .progress-percentage.over { color: var(--danger); }
     .controls { display: flex; gap: 6px; flex-wrap: wrap; }
 
     /* Empty state */
@@ -513,6 +519,34 @@
   const todayISO = () => new Date().toISOString().slice(0,10);
   const parseISO = (s) => s ? new Date(s + 'T00:00:00') : null;
 
+  /**
+   * Calculate task progress based on time tracking
+   * @param {Task} task
+   * @returns {{ percentage: number, isTimeBased: boolean, isOverBudget: boolean }}
+   */
+  function calculateProgress(task) {
+    const totalTime = (task.timeEntries || []).reduce((sum, e) => sum + (e.duration || 0), 0);
+
+    // If task has estimated time and some time logged, calculate automatically
+    if (task.estimatedTime && task.estimatedTime > 0) {
+      const percentage = Math.round((totalTime / task.estimatedTime) * 100);
+      return {
+        percentage: percentage,
+        actualPercentage: percentage, // Keep real percentage for display
+        isTimeBased: true,
+        isOverBudget: percentage > 100
+      };
+    }
+
+    // Otherwise use manual progress
+    return {
+      percentage: task.progress || 0,
+      actualPercentage: task.progress || 0,
+      isTimeBased: false,
+      isOverBudget: false
+    };
+  }
+
   function isOverdue(dueISO) {
     if (!dueISO) return false;
     const due = parseISO(dueISO);
@@ -651,19 +685,58 @@
 
     const notes = document.createElement('div'); notes.className='notes'; if (task.notes) notes.textContent = task.notes; else notes.style.display='none';
 
-    const progress = document.createElement('div'); progress.className='progress';
-    const fill = document.createElement('div'); fill.className='fill'; fill.style.width = (task.progress||0) + '%'; progress.appendChild(fill);
+    // Progress calculation with time tracking
+    const progressCalc = calculateProgress(task);
+    const displayPercentage = Math.min(progressCalc.percentage, 100); // Cap at 100 for visual bar
+
+    const progressInfo = document.createElement('div');
+    progressInfo.className = 'progress-info';
+
+    const progressLabel = document.createElement('span');
+    progressLabel.className = 'progress-label';
+    if (progressCalc.isTimeBased) {
+      progressLabel.textContent = '⏱️ Progresso (basato sul tempo)';
+    } else {
+      progressLabel.textContent = '📊 Progresso';
+    }
+
+    const progressPercentage = document.createElement('span');
+    progressPercentage.className = 'progress-percentage' + (progressCalc.isOverBudget ? ' over' : '');
+    progressPercentage.textContent = progressCalc.actualPercentage + '%';
+    if (progressCalc.isOverBudget) {
+      progressPercentage.textContent += ' ⚠️';
+    }
+
+    progressInfo.append(progressLabel, progressPercentage);
+
+    const progress = document.createElement('div');
+    progress.className='progress';
+    const fill = document.createElement('div');
+    fill.className = 'fill';
+    if (progressCalc.isOverBudget) {
+      fill.classList.add('over-budget');
+    } else if (displayPercentage >= 100) {
+      fill.classList.add('complete');
+    }
+    fill.style.width = displayPercentage + '%';
+    progress.appendChild(fill);
 
     const controls = document.createElement('div'); controls.className='controls';
-    const bPlus = btn('+10%', () => onUpdateProgress(task.id, +10));
-    const bMinus = btn('-10%', () => onUpdateProgress(task.id, -10));
+
+    // Show manual controls only if not time-based
+    if (!progressCalc.isTimeBased) {
+      const bPlus = btn('+10%', () => onUpdateProgress(task.id, +10));
+      const bMinus = btn('-10%', () => onUpdateProgress(task.id, -10));
+      controls.append(bPlus, bMinus);
+    }
+
     const bComplete = btn('✅ Completa', () => onComplete(task.id), 'success');
-    controls.append(bPlus, bMinus, bComplete);
+    controls.append(bComplete);
 
     // Time tracking section
     const timeSection = createTimeSection(task);
 
-    card.append(header, h3, meta, notes, progress, controls, timeSection);
+    card.append(header, h3, meta, notes, progressInfo, progress, controls, timeSection);
     return card;
   }
 
