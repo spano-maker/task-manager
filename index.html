@@ -213,6 +213,13 @@
     .project-summary-item { text-align: center; }
     .project-summary-value { font-size: 1.5rem; font-weight: 700; }
     .project-summary-label { font-size: var(--text-xs); opacity: 0.9; text-transform: uppercase; }
+
+    /* Reset section */
+    .reset-warning { background: #fef2f2; border: 2px solid var(--danger); border-radius: var(--radius-md); padding: 16px; margin-top: 16px; }
+    .reset-warning h5 { margin: 0 0 8px; color: var(--danger); display: flex; align-items: center; gap: 8px; }
+    .reset-warning p { margin: 0 0 12px; font-size: var(--text-sm); color: var(--gray-700); }
+    .reset-buttons { display: grid; gap: 8px; }
+    .reset-confirm-text { font-size: var(--text-xs); color: var(--gray-600); font-style: italic; margin-top: 8px; }
   
 /* --- Stats layout refinements --- */
 .charts-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
@@ -1307,7 +1314,42 @@ function renderStats(root) {
     timeContent.append(roundingDiv, goalDiv);
     cardTime.appendChild(timeContent);
 
-    grid.append(cardP, cardPe, cardTime);
+    // Reset section
+    const cardReset = document.createElement('div');
+    cardReset.className = 'settings-card';
+    cardReset.style.gridColumn = '1 / -1';
+
+    const resetWarning = document.createElement('div');
+    resetWarning.className = 'reset-warning';
+
+    const resetTitle = document.createElement('h5');
+    resetTitle.innerHTML = '⚠️ Zona Pericolosa - Reset Dati';
+
+    const resetDesc = document.createElement('p');
+    resetDesc.textContent = 'Le operazioni di reset sono irreversibili. Assicurati di aver esportato i dati prima di procedere.';
+
+    const resetButtons = document.createElement('div');
+    resetButtons.className = 'reset-buttons';
+
+    const btnResetTasks = btn('🗑️ Reset Solo Task', () => confirmReset('tasks'), 'danger');
+    btnResetTasks.style.width = '100%';
+
+    const btnResetTime = btn('⏱️ Reset Solo Tempo', () => confirmReset('time'), 'warn');
+    btnResetTime.style.width = '100%';
+
+    const btnResetAll = btn('💣 Reset Completo (TUTTO)', () => confirmReset('all'), 'danger');
+    btnResetAll.style.width = '100%';
+    btnResetAll.style.fontWeight = '700';
+
+    const confirmText = document.createElement('div');
+    confirmText.className = 'reset-confirm-text';
+    confirmText.textContent = 'Ogni reset richiederà una conferma di sicurezza.';
+
+    resetButtons.append(btnResetTasks, btnResetTime, btnResetAll, confirmText);
+    resetWarning.append(resetTitle, resetDesc, resetButtons);
+    cardReset.appendChild(resetWarning);
+
+    grid.append(cardP, cardPe, cardTime, cardReset);
     root.appendChild(grid);
   }
 
@@ -1446,6 +1488,93 @@ function renderStats(root) {
     if (!confirm(`Rimuovere la persona "${p}"?`)) return;
     state.people = state.people.filter(x => x !== p);
     save(); render();
+  }
+
+  // ==============================
+  //  RESET FUNCTIONS
+  // ==============================
+  function confirmReset(type) {
+    let message, confirmWord, action;
+
+    if (type === 'tasks') {
+      message = '⚠️ ATTENZIONE!\n\nQuesta operazione cancellerà TUTTE le task (aperte e completate) ma manterrà:\n- Tutti i dati tempo registrati\n- Progetti e persone\n- Impostazioni\n\nQuesta azione è IRREVERSIBILE!\n\nScrivi "CANCELLA TASK" per confermare:';
+      confirmWord = 'CANCELLA TASK';
+      action = resetTasks;
+    } else if (type === 'time') {
+      message = '⚠️ ATTENZIONE!\n\nQuesta operazione cancellerà TUTTI i dati tempo (sessioni, timer) da TUTTE le task ma manterrà:\n- Le task stesse\n- Progetti e persone\n- Impostazioni\n\nQuesta azione è IRREVERSIBILE!\n\nScrivi "CANCELLA TEMPO" per confermare:';
+      confirmWord = 'CANCELLA TEMPO';
+      action = resetTime;
+    } else if (type === 'all') {
+      message = '🚨 ATTENZIONE MASSIMA! 🚨\n\nQuesta operazione cancellerà TUTTO:\n- TUTTE le task (aperte e completate)\n- TUTTI i dati tempo\n- TUTTI i progetti personalizzati\n- TUTTE le persone personalizzate\n- Riporterà tutto allo stato iniziale\n\nQuesta azione è IRREVERSIBILE!\n\nScrivi "RESET COMPLETO" per confermare:';
+      confirmWord = 'RESET COMPLETO';
+      action = resetAll;
+    }
+
+    const userInput = prompt(message);
+
+    if (userInput === confirmWord) {
+      // Double confirmation
+      const doubleConfirm = confirm('Sei ASSOLUTAMENTE sicuro? Questa è l\'ultima conferma prima della cancellazione definitiva.');
+      if (doubleConfirm) {
+        action();
+        alert('✅ Reset completato con successo.');
+      } else {
+        alert('Reset annullato.');
+      }
+    } else if (userInput !== null) {
+      alert('❌ Conferma non corretta. Reset annullato per sicurezza.');
+    }
+  }
+
+  function resetTasks() {
+    state.tasks = [];
+    state.completedTasks = [];
+
+    // Stop any active timer
+    if (state.activeTimerId) {
+      if (timerInterval) clearInterval(timerInterval);
+      state.activeTimerId = null;
+    }
+
+    save();
+    render();
+  }
+
+  function resetTime() {
+    // Remove all time entries from all tasks
+    [...state.tasks, ...state.completedTasks].forEach(task => {
+      task.timeEntries = [];
+      task.activeTimer = null;
+    });
+
+    // Stop any active timer
+    if (state.activeTimerId) {
+      if (timerInterval) clearInterval(timerInterval);
+      state.activeTimerId = null;
+    }
+
+    save();
+    render();
+  }
+
+  function resetAll() {
+    // Reset everything to initial state
+    state.tasks = [];
+    state.completedTasks = [];
+    state.projects = [...defaultProjects];
+    state.people = [...defaultPeoples];
+    state.activeTimerId = null;
+    state.roundingMinutes = 0;
+    state.weeklyGoalHours = 40;
+
+    // Stop any active timer
+    if (timerInterval) clearInterval(timerInterval);
+
+    // Clear localStorage completely
+    localStorage.removeItem(STORAGE_KEY);
+
+    save();
+    render();
   }
 
   // ==============================
