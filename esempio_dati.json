@@ -1,0 +1,148 @@
+{
+  "tasks": [
+    {
+      "id": 1699000001,
+      "title": "Sviluppare nuova feature",
+      "project": "Progetti strategici",
+      "assignee": "Roberto",
+      "priority": "alta",
+      "progress": 0,
+      "dueDate": "2025-11-15",
+      "notes": "Implementare il sistema di notifiche push",
+      "estimatedTime": 28800,
+      "timeEntries": [
+        {
+          "id": 1699000101,
+          "start": "2025-11-08T09:00:00",
+          "end": "2025-11-08T12:30:00",
+          "duration": 12600,
+          "description": "Setup iniziale del progetto e configurazione ambiente",
+          "notes": "Installato dependencies e configurato webpack"
+        }
+      ],
+      "activeTimer": null
+    },
+    {
+      "id": 1699000002,
+      "title": "Revisione codice team",
+      "project": "Collaboratori",
+      "assignee": "Roberto & Carlo",
+      "priority": "media",
+      "progress": 0,
+      "dueDate": "2025-11-12",
+      "notes": "Code review del modulo autenticazione",
+      "estimatedTime": 7200,
+      "timeEntries": [
+        {
+          "id": 1699000201,
+          "start": "2025-11-09T14:00:00",
+          "end": "2025-11-09T15:30:00",
+          "duration": 5400,
+          "description": "Review del codice e feedback al team",
+          "notes": "Trovati 3 bug minori, suggerite ottimizzazioni"
+        }
+      ],
+      "activeTimer": null
+    },
+    {
+      "id": 1699000003,
+      "title": "Preparare presentazione Q4",
+      "project": "Marketing",
+      "assignee": "Carlo",
+      "priority": "critica",
+      "progress": 0,
+      "dueDate": "2025-11-11",
+      "notes": "Slides per board meeting di fine trimestre",
+      "estimatedTime": 14400,
+      "timeEntries": [
+        {
+          "id": 1699000301,
+          "start": "2025-11-07T10:00:00",
+          "end": "2025-11-07T12:00:00",
+          "duration": 7200,
+          "description": "Raccolta dati e analisi metriche",
+          "notes": "Estratti report da Analytics"
+        },
+        {
+          "id": 1699000302,
+          "start": "2025-11-08T15:00:00",
+          "end": "2025-11-08T17:30:00",
+          "duration": 9000,
+          "description": "Creazione slides e grafici",
+          "notes": "Completate 15 slides su 20"
+        }
+      ],
+      "activeTimer": null
+    }
+  ],
+  "completedTasks": [
+    {
+      "id": 1698900001,
+      "title": "Fix bug critico produzione",
+      "project": "Progetti ordinari",
+      "assignee": "Nicola",
+      "priority": "critica",
+      "progress": 100,
+      "dueDate": "2025-11-05",
+      "notes": "Bug sulla pagina checkout che impediva pagamenti",
+      "estimatedTime": 3600,
+      "timeEntries": [
+        {
+          "id": 1698900101,
+          "start": "2025-11-05T09:00:00",
+          "end": "2025-11-05T10:45:00",
+          "duration": 6300,
+          "description": "Identificazione e fix del bug",
+          "notes": "Problema nel validatore carta credito"
+        }
+      ],
+      "activeTimer": null,
+      "completedDate": "2025-11-05T10:45:00.000Z"
+    },
+    {
+      "id": 1698900002,
+      "title": "Aggiornamento documentazione API",
+      "project": "Hub",
+      "assignee": "Team",
+      "priority": "media",
+      "progress": 100,
+      "dueDate": "2025-11-06",
+      "notes": "Documentare i nuovi endpoint REST",
+      "estimatedTime": 10800,
+      "timeEntries": [
+        {
+          "id": 1698900201,
+          "start": "2025-11-06T14:00:00",
+          "end": "2025-11-06T17:00:00",
+          "duration": 10800,
+          "description": "Scrittura documentazione Swagger",
+          "notes": "Documentati 12 endpoint con esempi"
+        }
+      ],
+      "activeTimer": null,
+      "completedDate": "2025-11-06T17:00:00.000Z"
+    }
+  ],
+  "projects": [
+    "Progetti ordinari",
+    "Progetti strategici",
+    "Piani industriali",
+    "Collaboratori",
+    "Finanza",
+    "Hub",
+    "Formazione",
+    "Marketing"
+  ],
+  "people": [
+    "Roberto",
+    "Roberto & Carlo",
+    "Roberto & Carlo & Nicola",
+    "Carlo",
+    "Nicola",
+    "Team",
+    "Consulente esterno"
+  ],
+  "roundingMinutes": 15,
+  "weeklyGoalHours": 40,
+  "exportedAt": "2025-11-10T12:00:00.000Z"
+}
