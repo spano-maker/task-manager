@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Task Manager – Standalone</title>
+  <meta name="description" content="Task Manager standalone: CRUD, filtri, statistiche, import/export – senza build" />
+  <style>
+    /* -----------------------
+       DESIGN SYSTEM (Specs)
+       ----------------------- */
+    :root {
+      --primary: #1d4ed8;      /* Blu principale */
+      --success: #22c55e;      /* Verde successo */
+      --warning: #f97316;      /* Arancione warning */
+      --danger: #dc2626;       /* Rosso pericolo */
+      --yellow: #facc15;       /* Giallo media priorità */
+
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-500: #6b7280;
+      --gray-700: #374151;
+      --gray-900: #111827;
+
+      --text-xs: 0.75rem;     /* 12px */
+      --text-sm: 0.875rem;    /* 14px */
+      --text-base: 1rem;      /* 16px */
+      --text-lg: 1.125rem;    /* 18px */
+      --text-xl: 1.25rem;     /* 20px */
+      --text-2xl: 1.5rem;     /* 24px */
+
+      --container-max-width: 1200px;
+      --grid-gap: 20px;
+      --card-padding: 20px;
+      --form-gap: 12px;
+
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 10px;
+      --radius-full: 999px;
+
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--gray-900); background: var(--gray-50); }
+    a { color: var(--primary); text-decoration: none; }
+    button { cursor: pointer; }
+
+    .container { max-width: var(--container-max-width); margin: 0 auto; padding: 20px; }
+
+    /* Header */
+    header.app-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .title { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+    .title .emoji { font-size: 1.6rem; }
+    .today { color: var(--gray-700); font-size: var(--text-sm); }
+
+    /* Stats cards */
+    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 12px 0 18px; }
+    @media (min-width: 768px) { .stats { grid-template-columns: repeat(4, 1fr); } }
+    .stat { background: white; border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 6px; }
+    .stat .label { color: var(--gray-500); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat .value { font-size: 1.25rem; font-weight: 700; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 16px; }
+    .tab { border: 1px solid var(--gray-200); background: white; color: var(--gray-900); border-radius: var(--radius-full); padding: 8px 14px; font-size: var(--text-sm); display: inline-flex; align-items: center; gap: 6px; box-shadow: var(--shadow-sm); }
+    .tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    /* Toolbar (filters + actions) */
+    .toolbar { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 10px 0 16px; }
+    @media (min-width: 768px) { .toolbar { grid-template-columns: 1fr auto; align-items: start; } }
+    .filters { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 12px; box-shadow: var(--shadow-sm); display: grid; gap: 10px; grid-template-columns: 1fr; }
+    @media (min-width: 768px) { .filters { grid-template-columns: 1fr 180px 180px; } }
+    .filters .group { display: flex; gap: 10px; align-items: center; }
+    .filters label { font-size: var(--text-sm); color: var(--gray-700); }
+    .filters input[type="text"], .filters select { width: 100%; padding: 8px 10px; border-radius: var(--radius-md); border: 1px solid var(--gray-300); background: white; font-size: var(--text-sm); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .btn { padding: 9px 12px; border-radius: var(--radius-md); border: 1px solid var(--gray-300); background: white; color: var(--gray-900); box-shadow: var(--shadow-sm); font-size: var(--text-sm); }
+    .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn.success { background: var(--success); color: #fff; border-color: var(--success); }
+    .btn.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .btn.warn { background: var(--warning); color: #fff; border-color: var(--warning); }
+    .btn.ghost { background: transparent; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Grid */
+    .task-grid { display: grid; grid-template-columns: 1fr; gap: var(--grid-gap); }
+    @media (min-width: 768px) { .task-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .task-grid { grid-template-columns: repeat(3, 1fr); } }
+
+    /* Task card */
+    .task-card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: var(--card-padding); box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .task-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .task-card header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .priority-badge { padding: 4px 8px; border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 700; color: white; }
+    .prio-critica { background: var(--danger); }
+    .prio-alta { background: var(--warning); }
+    .prio-media { background: var(--yellow); color: #111; }
+    .prio-bassa { background: var(--success); }
+    .task-card .actions { display: flex; gap: 6px; }
+
+    .task-card h3 { margin: 0 0 6px; font-size: var(--text-lg); }
+    .meta { color: var(--gray-700); font-size: var(--text-sm); display: flex; gap: 10px; flex-wrap: wrap; }
+    .notes { margin: 8px 0 12px; font-size: var(--text-sm); color: var(--gray-900); white-space: pre-wrap; }
+
+    .progress { height: 8px; background: var(--gray-100); border-radius: var(--radius-full); overflow: hidden; margin: 6px 0 10px; border: 1px solid var(--gray-200); }
+    .progress .fill { height: 100%; background: linear-gradient(90deg, var(--primary), #60a5fa); width: 0%; transition: width 0.2s ease; }
+    .progress .fill.over-budget { background: linear-gradient(90deg, var(--warning), var(--danger)); }
+    .progress .fill.complete { background: linear-gradient(90deg, var(--success), #4ade80); }
+    .progress-info { display: flex; justify-content: space-between; align-items: center; font-size: var(--text-xs); color: var(--gray-700); margin-bottom: 4px; }
+    .progress-label { font-weight: 600; }
+    .progress-percentage { font-weight: 700; }
+    .progress-percentage.over { color: var(--danger); }
+    .controls { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    /* Empty state */
+    .empty { text-align: center; color: var(--gray-700); padding: 32px; border: 1px dashed var(--gray-300); border-radius: var(--radius-lg); background: #fff; }
+
+    /* Completed list */
+    .completed-list { display: grid; gap: 10px; }
+    .completed-item { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-md); padding: 12px; }
+    .completed-item .info { display: flex; gap: 10px; flex-wrap: wrap; color: var(--gray-700); }
+
+    /* Settings */
+    .settings-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+    @media (min-width: 768px) { .settings-grid { grid-template-columns: 1fr 1fr; } }
+    .settings-card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-sm); }
+    .settings-card h4 { margin: 0 0 10px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--gray-300); border-radius: var(--radius-full); margin: 4px; background: var(--gray-100); }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; align-items: center; justify-content: center; padding: 16px; }
+    .modal-backdrop.open { display: flex; }
+    .modal { width: 100%; max-width: 640px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow: hidden; }
+    .modal header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--gray-200); }
+    .modal .content { padding: 16px; }
+    .form-grid { display: grid; grid-template-columns: 1fr; gap: var(--form-gap); }
+    @media (min-width: 640px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+    .form-grid .full { grid-column: 1 / -1; }
+    .field { display: grid; gap: 6px; }
+    .field label { font-size: var(--text-sm); color: var(--gray-700); }
+    .field input, .field select, .field textarea { width: 100%; padding: 9px 10px; border-radius: var(--radius-md); border: 1px solid var(--gray-300); font-size: var(--text-sm); background: white; }
+    .help { font-size: var(--text-xs); color: var(--gray-500); }
+
+    /* Micro-interactions */
+    .button:hover { opacity: 0.92; }
+    .loading { animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+    /* Footer note */
+    footer { text-align: center; color: var(--gray-500); font-size: var(--text-xs); margin: 24px 0 10px; }
+
+    /* Time Tracking Styles */
+    .time-section { border-top: 1px solid var(--gray-200); padding-top: 10px; margin-top: 10px; }
+    .time-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .time-stats { display: flex; gap: 12px; font-size: var(--text-sm); color: var(--gray-700); flex-wrap: wrap; }
+    .time-stat-item { display: flex; align-items: center; gap: 4px; }
+    .time-badge { background: var(--gray-100); padding: 2px 6px; border-radius: var(--radius-sm); font-weight: 600; }
+    .time-badge.over { background: var(--danger); color: white; }
+    .timer-display { font-size: var(--text-xl); font-weight: 700; color: var(--primary); font-family: 'Courier New', monospace; }
+    .timer-display.running { color: var(--success); animation: pulse 2s infinite; }
+    .timer-controls { display: flex; gap: 6px; margin-top: 8px; }
+    .btn.timer { padding: 6px 10px; font-size: var(--text-xs); }
+    .btn.timer.start { background: var(--success); color: white; border-color: var(--success); }
+    .btn.timer.stop { background: var(--danger); color: white; border-color: var(--danger); }
+    .btn.timer.pause { background: var(--warning); color: white; border-color: var(--warning); }
+
+    /* Timesheet table */
+    .timesheet-table { width: 100%; border-collapse: collapse; background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden; }
+    .timesheet-table th, .timesheet-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--gray-200); font-size: var(--text-sm); }
+    .timesheet-table th { background: var(--gray-100); font-weight: 600; color: var(--gray-700); }
+    .timesheet-table tr:hover { background: var(--gray-50); }
+    .timesheet-filters { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 16px; }
+    @media (max-width: 768px) { .timesheet-filters { grid-template-columns: 1fr; } }
+    .time-entry-desc { color: var(--gray-700); font-style: italic; }
+    .duration-badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: var(--radius-full); font-weight: 600; font-size: var(--text-xs); }
+
+    /* Time entry modal */
+    .time-modal-grid { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+    .time-modal-grid .full { grid-column: 1 / -1; }
+
+    /* Projects view */
+    .projects-grid { display: grid; grid-template-columns: 1fr; gap: var(--grid-gap); }
+    @media (min-width: 768px) { .projects-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .projects-grid { grid-template-columns: repeat(3, 1fr); } }
+    .project-card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: var(--card-padding); box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease; cursor: pointer; }
+    .project-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .project-card h3 { margin: 0 0 12px; font-size: var(--text-lg); display: flex; align-items: center; gap: 8px; }
+    .project-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+    .project-stat { text-align: center; padding: 12px; background: var(--gray-50); border-radius: var(--radius-md); }
+    .project-stat-value { font-size: var(--text-xl); font-weight: 700; color: var(--primary); }
+    .project-stat-label { font-size: var(--text-xs); color: var(--gray-700); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+    /* Project detail modal */
+    .project-modal-content { max-height: 60vh; overflow-y: auto; }
+    .project-task-list { display: grid; gap: 8px; margin-top: 12px; }
+    .project-task-item { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 12px; background: var(--gray-50); border-radius: var(--radius-md); border: 1px solid var(--gray-200); }
+    .project-task-item:hover { background: var(--gray-100); }
+    .project-task-info h4 { margin: 0 0 4px; font-size: var(--text-base); }
+    .project-task-meta { font-size: var(--text-sm); color: var(--gray-700); }
+    .project-task-time { text-align: right; }
+    .project-task-time .hours { font-size: var(--text-xl); font-weight: 700; color: var(--primary); }
+    .project-task-time .label { font-size: var(--text-xs); color: var(--gray-700); }
+    .project-summary { background: var(--primary); color: white; padding: 16px; border-radius: var(--radius-md); margin-bottom: 16px; }
+    .project-summary h3 { margin: 0 0 12px; }
+    .project-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .project-summary-item { text-align: center; }
+    .project-summary-value { font-size: 1.5rem; font-weight: 700; }
+    .project-summary-label { font-size: var(--text-xs); opacity: 0.9; text-transform: uppercase; }
+
+    /* Reset section */
+    .reset-warning { background: #fef2f2; border: 2px solid var(--danger); border-radius: var(--radius-md); padding: 16px; margin-top: 16px; }
+    .reset-warning h5 { margin: 0 0 8px; color: var(--danger); display: flex; align-items: center; gap: 8px; }
+    .reset-warning p { margin: 0 0 12px; font-size: var(--text-sm); color: var(--gray-700); }
+    .reset-buttons { display: grid; gap: 8px; }
+    .reset-confirm-text { font-size: var(--text-xs); color: var(--gray-600); font-style: italic; margin-top: 8px; }
+  
+/* --- Stats layout refinements --- */
+.charts-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 900px) { .charts-grid { grid-template-columns: 1fr 1fr; } }
+.chart-box { background:#fff; border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:12px; }
+.chart-box h4 { margin: 0 0 8px; font-size: var(--text-base); }
+.stats-table { margin-top:8px; width:100%; border-collapse: collapse; font-size: var(--text-sm); }
+.stats-table th, .stats-table td { padding: 6px 8px; border-bottom: 1px dashed var(--gray-200); }
+.stats-table th { text-align: left; color: var(--gray-700); font-weight: 600; }
+.stats-table td { text-align: right; font-weight: 700; }
+.stats-canvas { width: 100%; height: 220px; display:block; }
+
+  
+/* --- Compact chart containers --- */
+.chart-container { position: relative; width: 100%; height: 160px; }
+@media (max-width: 640px) { .chart-container { height: 140px; } }
+.stats-canvas { width: 100% !important; height: 100% !important; display: block; }
+
+  </style>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="app-header" aria-label="intestazione">
+      <div class="title"><span class="emoji">🗂️</span> Task Manager <span id="dataOggi" class="today"></span></div>
+      <div class="actions">
+        <button id="btnNuovo" class="btn primary" aria-label="Nuova attività">➕ Nuova</button>
+        <button id="btnEsporta" class="btn" aria-label="Esporta dati">⬇️ Esporta</button>
+        <button id="btnImporta" class="btn" aria-label="Importa dati">⬆️ Importa</button>
+        <input id="fileImport" type="file" accept="application/json" style="display:none" />
+      </div>
+    </header>
+
+    <!-- Stats quick -->
+    <section class="stats" aria-label="metriche">
+      <div class="stat"><div class="label">In corso</div><div class="value" id="mInCorso">0</div></div>
+      <div class="stat"><div class="label">Critiche</div><div class="value" id="mCritiche">0</div></div>
+      <div class="stat"><div class="label">Scadute</div><div class="value" id="mScadute">0</div></div>
+      <div class="stat"><div class="label">Completate (30g)</div><div class="value" id="mCompletateMese">0</div></div>
+    </section>
+
+    <!-- Tabs -->
+    <nav class="tabs" role="tablist" aria-label="navigazione principali">
+      <button class="tab active" data-tab="tutte" role="tab">🔋 Tutte</button>
+      <button class="tab" data-tab="critiche" role="tab">🚨 Critiche</button>
+      <button class="tab" data-tab="completate" role="tab">✅ Completate</button>
+      <button class="tab" data-tab="attivita" role="tab">📋 Riepilogo Attività</button>
+      <button class="tab" data-tab="timesheet" role="tab">⏱️ Timesheet</button>
+      <button class="tab" data-tab="statistiche" role="tab">📊 Statistiche</button>
+      <button class="tab" data-tab="impostazioni" role="tab">⚙️ Impostazioni</button>
+    </nav>
+
+    <!-- Toolbar: filters + actions -->
+    <section class="toolbar" aria-label="strumenti">
+      <div class="filters">
+        <div class="group">
+          <label for="q">🔎 Ricerca</label>
+          <input id="q" type="text" placeholder="Titolo o note…" aria-label="Ricerca" />
+        </div>
+        <div class="group">
+          <label for="fPrio">⏫ Priorità</label>
+          <select id="fPrio" aria-label="Filtro priorità">
+            <option value="all">Tutte</option>
+            <option value="critica">Critica</option>
+            <option value="alta">Alta</option>
+            <option value="media">Media</option>
+            <option value="bassa">Bassa</option>
+          </select>
+        </div>
+        <div class="group">
+          <label for="fDue">📅 Scadenza</label>
+          <select id="fDue" aria-label="Filtro scadenza">
+            <option value="all">Tutte</option>
+            <option value="overdue">Scadute</option>
+            <option value="today">Oggi</option>
+            <option value="next7">Prossimi 7 giorni</option>
+            <option value="nodue">Senza scadenza</option>
+          </select>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="btnPulisciFiltri" class="btn ghost">🧹 Pulisci filtri</button>
+      </div>
+    </section>
+
+    <!-- Content -->
+    <main id="content" aria-live="polite"></main>
+
+    <footer>Standalone HTML con Time Tracking – nessuna build. Nota: PWA/Service Worker non inclusi in singolo file.</footer>
+  </div>
+
+  <!-- MODAL: Task Form -->
+  <div id="modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document">
+      <header>
+        <div id="modalTitle" class="title" style="font-size:1.1rem">✏️ Nuova attività</div>
+        <button id="modalClose" class="btn">✖</button>
+      </header>
+      <div class="content">
+        <form id="taskForm" autocomplete="off">
+          <input type="hidden" id="taskId" />
+          <div class="form-grid">
+            <div class="field full">
+              <label for="title">Titolo <span style="color:var(--danger)">*</span></label>
+              <input id="title" required placeholder="Esempio: Preparare presentazione" />
+            </div>
+            <div class="field">
+              <label for="project">Progetto</label>
+              <select id="project"></select>
+            </div>
+            <div class="field">
+              <label for="assignee">Assegnatario</label>
+              <select id="assignee"></select>
+            </div>
+            <div class="field">
+              <label for="priority">Priorità</label>
+              <select id="priority">
+                <option value="bassa">Bassa</option>
+                <option value="media">Media</option>
+                <option value="alta">Alta</option>
+                <option value="critica">Critica</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="progress">Progresso (%)</label>
+              <input id="progress" type="number" min="0" max="100" step="1" value="0" />
+              <div class="help">0–100</div>
+            </div>
+            <div class="field">
+              <label for="dueDate">Scadenza</label>
+              <input id="dueDate" type="date" />
+            </div>
+            <div class="field">
+              <label for="estimatedTime">Tempo stimato (ore)</label>
+              <input id="estimatedTime" type="number" min="0" step="0.5" placeholder="es. 2.5" />
+              <div class="help">Opzionale</div>
+            </div>
+            <div class="field full">
+              <label for="notes">Note</label>
+              <textarea id="notes" rows="3" placeholder="Dettagli, link, checklist…"></textarea>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:14px;">
+            <button type="button" class="btn" id="btnAnnulla">Annulla</button>
+            <button type="submit" class="btn primary" id="btnSalva">Salva</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Time Entry -->
+  <div id="timeModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document">
+      <header>
+        <div id="timeModalTitle" class="title" style="font-size:1.1rem">⏱️ Aggiungi Sessione</div>
+        <button id="timeModalClose" class="btn">✖</button>
+      </header>
+      <div class="content">
+        <form id="timeEntryForm" autocomplete="off">
+          <input type="hidden" id="entryTaskId" />
+          <input type="hidden" id="entryId" />
+          <div class="time-modal-grid">
+            <div class="field">
+              <label for="entryDate">Data</label>
+              <input id="entryDate" type="date" required />
+            </div>
+            <div class="field">
+              <label for="entryDuration">Durata (ore)</label>
+              <input id="entryDuration" type="number" min="0" step="0.25" placeholder="es. 1.5" required />
+            </div>
+            <div class="field full">
+              <label for="entryDescription">Descrizione attività <span style="color:var(--danger)">*</span></label>
+              <input id="entryDescription" required placeholder="Cosa hai fatto in questa sessione?" />
+            </div>
+            <div class="field full">
+              <label for="entryNotes">Note (opzionale)</label>
+              <textarea id="entryNotes" rows="2" placeholder="Note aggiuntive…"></textarea>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:14px;">
+            <button type="button" class="btn" id="btnTimeCancel">Annulla</button>
+            <button type="submit" class="btn primary" id="btnTimeSave">Salva</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Activity Detail -->
+  <div id="projectModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document" style="max-width: 800px;">
+      <header>
+        <div id="projectModalTitle" class="title" style="font-size:1.1rem">📋 Dettaglio Attività</div>
+        <button id="projectModalClose" class="btn">✖</button>
+      </header>
+      <div class="content project-modal-content">
+        <div id="projectModalBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ==============================
+  //  DATA MODEL & DEFAULT SETUP
+  // ==============================
+  const defaultProjects = [
+    "Progetti ordinari",
+    "Progetti strategici",
+    "Piani industriali",
+    "Collaboratori",
+    "Finanza",
+    "Hub",
+    "Formazione",
+    "Marketing"
+  ];
+
+  const defaultPeoples = [
+    "Roberto",
+    "Roberto & Carlo",
+    "Roberto & Carlo & Nicola",
+    "Carlo",
+    "Nicola",
+    "Team",
+    "Consulente esterno"
+  ];
+
+  const STORAGE_KEY = 'tm_standalone_v1';
+  const SAVE_DEBOUNCE_MS = 300;
+
+  /** @typedef {Object} Task */
+  /** @type {{
+   *  tasks: Task[],
+   *  completedTasks: Task[],
+   *  projects: string[],
+   *  people: string[],
+   *  tab: 'tutte'|'critiche'|'completate'|'statistiche'|'impostazioni'|'timesheet'|'attivita',
+   *  filters: { priority: 'all'|'bassa'|'media'|'alta'|'critica', due: 'all'|'overdue'|'today'|'next7'|'nodue' },
+   *  q: string,
+   *  activeTimerId: number|null,
+   *  roundingMinutes: number,
+   *  weeklyGoalHours: number
+   * }} */
+  const state = {
+    tasks: [],
+    completedTasks: [],
+    projects: [...defaultProjects],
+    people: [...defaultPeoples],
+    tab: 'tutte',
+    filters: { priority: 'all', due: 'all' },
+    q: '',
+    activeTimerId: null,
+    roundingMinutes: 0, // 0 = no rounding, 5, 10, 15
+    weeklyGoalHours: 40
+  };
+
+  let saveTimer = null;
+  let timerInterval = null;
+
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      const payload = {
+        tasks: state.tasks,
+        completedTasks: state.completedTasks,
+        projects: state.projects,
+        people: state.people,
+        roundingMinutes: state.roundingMinutes,
+        weeklyGoalHours: state.weeklyGoalHours
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    }, SAVE_DEBOUNCE_MS);
+  }
+
+  function load() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        const data = JSON.parse(raw);
+        state.tasks = Array.isArray(data.tasks) ? data.tasks : [];
+        state.completedTasks = Array.isArray(data.completedTasks) ? data.completedTasks : [];
+        state.projects = Array.isArray(data.projects) && data.projects.length ? data.projects : [...defaultProjects];
+        state.people = Array.isArray(data.people) && data.people.length ? data.people : [...defaultPeoples];
+        state.roundingMinutes = data.roundingMinutes || 0;
+        state.weeklyGoalHours = data.weeklyGoalHours || 40;
+
+        // Ensure all tasks have time tracking fields
+        [...state.tasks, ...state.completedTasks].forEach(t => {
+          if (!t.timeEntries) t.timeEntries = [];
+          if (t.estimatedTime === undefined) t.estimatedTime = 0;
+          if (t.activeTimer === undefined) t.activeTimer = null;
+        });
+      } catch (e) {
+        console.warn('Dati corrotti, avvio con default.');
+      }
+    }
+  }
+
+  // ==============================
+  //  UTILITIES
+  // ==============================
+  const fmtDate = (d) => new Intl.DateTimeFormat('it-IT', { dateStyle: 'medium' }).format(d);
+  const todayISO = () => new Date().toISOString().slice(0,10);
+  const parseISO = (s) => s ? new Date(s + 'T00:00:00') : null;
+
+  /**
+   * Calculate task progress based on time tracking
+   * @param {Task} task
+   * @returns {{ percentage: number, isTimeBased: boolean, isOverBudget: boolean }}
+   */
+  function calculateProgress(task) {
+    const totalTime = (task.timeEntries || []).reduce((sum, e) => sum + (e.duration || 0), 0);
+
+    // If task has estimated time and some time logged, calculate automatically
+    if (task.estimatedTime && task.estimatedTime > 0) {
+      const percentage = Math.round((totalTime / task.estimatedTime) * 100);
+      return {
+        percentage: percentage,
+        actualPercentage: percentage, // Keep real percentage for display
+        isTimeBased: true,
+        isOverBudget: percentage > 100
+      };
+    }
+
+    // Otherwise use manual progress
+    return {
+      percentage: task.progress || 0,
+      actualPercentage: task.progress || 0,
+      isTimeBased: false,
+      isOverBudget: false
+    };
+  }
+
+  function isOverdue(dueISO) {
+    if (!dueISO) return false;
+    const due = parseISO(dueISO);
+    const today = new Date(); today.setHours(0,0,0,0);
+    return due && due < today;
+  }
+  function isDueToday(dueISO) {
+    if (!dueISO) return false;
+    return dueISO === todayISO();
+  }
+  function isDueSoon(dueISO, days) {
+    if (!dueISO) return false;
+    const due = parseISO(dueISO);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const soon = new Date(today); soon.setDate(soon.getDate() + days);
+    return due >= today && due <= soon;
+  }
+
+  function genId() { return Date.now() + Math.floor(Math.random()*100000); }
+
+  const PRIORITY_ORDER = { critica: 0, alta: 1, media: 2, bassa: 3 };
+  function sortTasks(a, b) {
+    const pa = PRIORITY_ORDER[a.priority] ?? 3;
+    const pb = PRIORITY_ORDER[b.priority] ?? 3;
+    if (pa !== pb) return pa - pb;
+    // by due date (nulls last)
+    if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+    if (a.dueDate && !b.dueDate) return -1;
+    if (!a.dueDate && b.dueDate) return 1;
+    return a.title.localeCompare(b.title, 'it');
+  }
+
+  function applyFilters(list) {
+    let res = [...list];
+    const { priority, due } = state.filters;
+    const q = state.q.trim().toLowerCase();
+
+    if (priority !== 'all') {
+      res = res.filter(t => t.priority === priority);
+    }
+    if (due !== 'all') {
+      if (due === 'overdue') res = res.filter(t => isOverdue(t.dueDate));
+      if (due === 'today') res = res.filter(t => isDueToday(t.dueDate));
+      if (due === 'next7') res = res.filter(t => isDueSoon(t.dueDate, 7));
+      if (due === 'nodue') res = res.filter(t => !t.dueDate);
+    }
+    if (q) {
+      res = res.filter(t => (t.title + ' ' + (t.notes||'')).toLowerCase().includes(q));
+    }
+    return res.sort(sortTasks);
+  }
+
+  // ==============================
+  //  RENDERING
+  // ==============================
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+  function setToday() {
+    $('#dataOggi').textContent = '· ' + fmtDate(new Date());
+  }
+
+  function render() {
+    // header metrics
+    const inCorso = state.tasks.length;
+    const critiche = state.tasks.filter(t => t.priority === 'critica').length;
+    const scadute = state.tasks.filter(t => isOverdue(t.dueDate)).length;
+    const now = new Date(); const past30 = new Date(); past30.setDate(now.getDate()-30);
+    const completateMese = state.completedTasks.filter(t => t.completedDate && new Date(t.completedDate) >= past30).length;
+
+    $('#mInCorso').textContent = inCorso;
+    $('#mCritiche').textContent = critiche;
+    $('#mScadute').textContent = scadute;
+    $('#mCompletateMese').textContent = completateMese;
+
+    // tabs active
+    $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === state.tab));
+
+    // content by tab
+    const mount = $('#content');
+    mount.innerHTML = '';
+    if (state.tab === 'tutte' || state.tab === 'critiche') {
+      const list = state.tab === 'critiche' ? state.tasks.filter(t => t.priority==='critica') : state.tasks;
+      renderTaskList(mount, applyFilters(list));
+    } else if (state.tab === 'completate') {
+      renderCompleted(mount);
+    } else if (state.tab === 'attivita') {
+      renderActivities(mount);
+    } else if (state.tab === 'timesheet') {
+      renderTimesheet(mount);
+    } else if (state.tab === 'statistiche') {
+      renderStats(mount);
+    } else if (state.tab === 'impostazioni') {
+      renderSettings(mount);
+    }
+  }
+
+  function pill(text) { const s=document.createElement('span'); s.className='pill'; s.textContent=text; return s; }
+
+  function renderTaskList(root, list) {
+    if (!list.length) {
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = 'Nessuna attività. Aggiungi la prima con “Nuova”.';
+      root.appendChild(empty);
+      return;
+    }
+    const grid = document.createElement('div');
+    grid.className = 'task-grid';
+    list.forEach(task => grid.appendChild(taskCard(task)));
+    root.appendChild(grid);
+  }
+
+  function taskCard(task) {
+    const card = document.createElement('div');
+    card.className = 'task-card';
+
+    const header = document.createElement('header');
+    const prio = document.createElement('span');
+    prio.className = `priority-badge prio-${task.priority}`;
+    prio.textContent = task.priority.toUpperCase();
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    const bEdit = btn('✏️', () => openModal(task));
+    bEdit.title = 'Modifica';
+    const bDel = btn('🗑️', () => onDelete(task.id), 'danger'); bDel.title = 'Elimina';
+    actions.append(bEdit, bDel);
+
+    header.append(prio, actions);
+
+    const h3 = document.createElement('h3'); h3.textContent = task.title;
+
+    const meta = document.createElement('div'); meta.className = 'meta';
+    meta.innerHTML = `👤 ${task.assignee || '—'} · 📂 ${task.project || '—'} · 📅 ${task.dueDate ? fmtDate(parseISO(task.dueDate)) : '—'}`;
+
+    const notes = document.createElement('div'); notes.className='notes'; if (task.notes) notes.textContent = task.notes; else notes.style.display='none';
+
+    // Progress calculation with time tracking
+    const progressCalc = calculateProgress(task);
+    const displayPercentage = Math.min(progressCalc.percentage, 100); // Cap at 100 for visual bar
+
+    const progressInfo = document.createElement('div');
+    progressInfo.className = 'progress-info';
+
+    const progressLabel = document.createElement('span');
+    progressLabel.className = 'progress-label';
+    if (progressCalc.isTimeBased) {
+      progressLabel.textContent = '⏱️ Progresso (basato sul tempo)';
+    } else {
+      progressLabel.textContent = '📊 Progresso';
+    }
+
+    const progressPercentage = document.createElement('span');
+    progressPercentage.className = 'progress-percentage' + (progressCalc.isOverBudget ? ' over' : '');
+    progressPercentage.textContent = progressCalc.actualPercentage + '%';
+    if (progressCalc.isOverBudget) {
+      progressPercentage.textContent += ' ⚠️';
+    }
+
+    progressInfo.append(progressLabel, progressPercentage);
+
+    const progress = document.createElement('div');
+    progress.className='progress';
+    const fill = document.createElement('div');
+    fill.className = 'fill';
+    if (progressCalc.isOverBudget) {
+      fill.classList.add('over-budget');
+    } else if (displayPercentage >= 100) {
+      fill.classList.add('complete');
+    }
+    fill.style.width = displayPercentage + '%';
+    progress.appendChild(fill);
+
+    const controls = document.createElement('div'); controls.className='controls';
+
+    // Show manual controls only if not time-based
+    if (!progressCalc.isTimeBased) {
+      const bPlus = btn('+10%', () => onUpdateProgress(task.id, +10));
+      const bMinus = btn('-10%', () => onUpdateProgress(task.id, -10));
+      controls.append(bPlus, bMinus);
+    }
+
+    const bComplete = btn('✅ Completa', () => onComplete(task.id), 'success');
+    controls.append(bComplete);
+
+    // Time tracking section
+    const timeSection = createTimeSection(task);
+
+    card.append(header, h3, meta, notes, progressInfo, progress, controls, timeSection);
+    return card;
+  }
+
+  function createTimeSection(task) {
+    const section = document.createElement('div');
+    section.className = 'time-section';
+
+    const timeHeader = document.createElement('div');
+    timeHeader.className = 'time-header';
+    timeHeader.innerHTML = '<strong>🕒 Tempo</strong>';
+
+    const timeStats = document.createElement('div');
+    timeStats.className = 'time-stats';
+
+    // Calculate total time
+    const totalSeconds = (task.timeEntries || []).reduce((sum, e) => sum + (e.duration || 0), 0);
+    const totalHours = (totalSeconds / 3600).toFixed(2);
+    const estimatedHours = task.estimatedTime ? (task.estimatedTime / 3600).toFixed(2) : 0;
+
+    const statLogged = document.createElement('div');
+    statLogged.className = 'time-stat-item';
+    statLogged.innerHTML = `📝 Registrato: <span class="time-badge">${totalHours}h</span>`;
+
+    const statEstimated = document.createElement('div');
+    statEstimated.className = 'time-stat-item';
+    if (task.estimatedTime) {
+      const isOver = totalSeconds > task.estimatedTime;
+      statEstimated.innerHTML = `🎯 Stimato: <span class="time-badge ${isOver?'over':''}">${estimatedHours}h</span>`;
+    } else {
+      statEstimated.innerHTML = `🎯 Stimato: <span class="time-badge">—</span>`;
+    }
+
+    timeStats.append(statLogged, statEstimated);
+
+    // Timer display
+    const timerDisplay = document.createElement('div');
+    timerDisplay.className = 'timer-display';
+    timerDisplay.id = `timer-${task.id}`;
+    if (task.activeTimer) {
+      const elapsed = Math.floor((Date.now() - new Date(task.activeTimer.start).getTime()) / 1000);
+      timerDisplay.textContent = formatDuration(elapsed);
+      timerDisplay.classList.add('running');
+    } else {
+      timerDisplay.textContent = '00:00:00';
+    }
+
+    // Timer controls
+    const timerControls = document.createElement('div');
+    timerControls.className = 'timer-controls';
+
+    if (task.activeTimer) {
+      const bStop = btn('⏹️ Stop', () => stopTimer(task.id), 'timer stop');
+      timerControls.append(bStop);
+    } else {
+      const bStart = btn('▶️ Start', () => startTimer(task.id), 'timer start');
+      timerControls.append(bStart);
+    }
+
+    const bManual = btn('➕ Manuale', () => openTimeModal(task.id));
+    timerControls.append(bManual);
+
+    section.append(timeHeader, timeStats, timerDisplay, timerControls);
+    return section;
+  }
+
+  function renderCompleted(root) {
+    if (!state.completedTasks.length) {
+      const empty = document.createElement('div'); empty.className='empty'; empty.textContent='Nessuna attività completata.'; root.appendChild(empty); return;
+    }
+    const list = document.createElement('div'); list.className='completed-list';
+    state.completedTasks
+      .slice()
+      .sort((a,b) => (b.completedDate||'').localeCompare(a.completedDate||''))
+      .forEach(t => {
+        const item = document.createElement('div'); item.className='completed-item';
+        const info = document.createElement('div'); info.className='info';
+        const dt = t.completedDate ? fmtDate(new Date(t.completedDate)) : '—';
+        info.textContent = `✅ ${t.title} · ${t.assignee||'—'} · ${t.project||'—'} · Completata: ${dt}`;
+        const act = document.createElement('div');
+        const bRestore = btn('↩️ Ripristina', () => onRestore(t.id));
+        act.appendChild(bRestore);
+        item.append(info, act); list.appendChild(item);
+      });
+    root.appendChild(list);
+  }
+
+  function renderActivities(root) {
+    const allTasks = [...state.tasks, ...state.completedTasks];
+
+    if (allTasks.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = 'Nessuna attività presente.';
+      root.appendChild(empty);
+      return;
+    }
+
+    // Calculate time for each task
+    const tasksWithTime = allTasks.map(task => {
+      const totalTime = (task.timeEntries || []).reduce((sum, e) => sum + (e.duration || 0), 0);
+      return {
+        ...task,
+        totalTimeSeconds: totalTime,
+        totalTimeHours: (totalTime / 3600).toFixed(2)
+      };
+    });
+
+    // Sort by time spent (descending)
+    tasksWithTime.sort((a, b) => b.totalTimeSeconds - a.totalTimeSeconds);
+
+    const grid = document.createElement('div');
+    grid.className = 'projects-grid'; // Riuso lo stesso stile
+
+    tasksWithTime.forEach(task => {
+      const card = document.createElement('div');
+      card.className = 'project-card';
+      card.addEventListener('click', () => openActivityModal(task));
+
+      const h3 = document.createElement('h3');
+      const statusIcon = task.completedDate ? '✅' : '🔄';
+      h3.innerHTML = `${statusIcon} ${task.title}`;
+
+      const meta = document.createElement('div');
+      meta.style.cssText = 'font-size: var(--text-sm); color: var(--gray-700); margin-bottom: 12px;';
+      meta.innerHTML = `📂 ${task.project || 'Senza progetto'} · 👤 ${task.assignee || '—'}`;
+
+      const statsGrid = document.createElement('div');
+      statsGrid.className = 'project-stats-grid';
+
+      const sessionCount = (task.timeEntries || []).length;
+      const estimatedHours = task.estimatedTime ? (task.estimatedTime / 3600).toFixed(1) : '—';
+      const prioLabel = task.priority.charAt(0).toUpperCase() + task.priority.slice(1);
+
+      statsGrid.innerHTML = `
+        <div class="project-stat">
+          <div class="project-stat-value">${task.totalTimeHours}h</div>
+          <div class="project-stat-label">Tempo Totale</div>
+        </div>
+        <div class="project-stat">
+          <div class="project-stat-value">${sessionCount}</div>
+          <div class="project-stat-label">Sessioni</div>
+        </div>
+        <div class="project-stat">
+          <div class="project-stat-value">${estimatedHours}h</div>
+          <div class="project-stat-label">Stimato</div>
+        </div>
+        <div class="project-stat">
+          <div class="project-stat-value">${prioLabel}</div>
+          <div class="project-stat-label">Priorità</div>
+        </div>
+      `;
+
+      card.append(h3, meta, statsGrid);
+      grid.appendChild(card);
+    });
+
+    root.appendChild(grid);
+  }
+
+  function openActivityModal(task) {
+    const modal = $('#projectModal');
+    const body = $('#projectModalBody');
+
+    const statusIcon = task.completedDate ? '✅' : '🔄';
+    $('#projectModalTitle').textContent = `${statusIcon} ${task.title}`;
+
+    const totalTime = (task.timeEntries || []).reduce((sum, e) => sum + (e.duration || 0), 0);
+    const totalTimeHours = (totalTime / 3600).toFixed(2);
+    const estimatedHours = task.estimatedTime ? (task.estimatedTime / 3600).toFixed(1) : '—';
+    const sessionCount = (task.timeEntries || []).length;
+
+    // Summary section
+    const summary = document.createElement('div');
+    summary.className = 'project-summary';
+    summary.innerHTML = `
+      <h3>Riepilogo Attività</h3>
+      <div style="margin-bottom: 12px; font-size: var(--text-sm); opacity: 0.9;">
+        📂 ${task.project || 'Senza progetto'} · 👤 ${task.assignee || '—'} · ⚡ Priorità: ${task.priority}
+      </div>
+      <div class="project-summary-grid">
+        <div class="project-summary-item">
+          <div class="project-summary-value">${totalTimeHours}h</div>
+          <div class="project-summary-label">Tempo Totale</div>
+        </div>
+        <div class="project-summary-item">
+          <div class="project-summary-value">${sessionCount}</div>
+          <div class="project-summary-label">Sessioni</div>
+        </div>
+        <div class="project-summary-item">
+          <div class="project-summary-value">${estimatedHours}h</div>
+          <div class="project-summary-label">Tempo Stimato</div>
+        </div>
+      </div>
+    `;
+
+    // Time entries list
+    const sessionsSection = document.createElement('div');
+    const sessionsTitle = document.createElement('h4');
+    sessionsTitle.textContent = 'Sessioni di Lavoro';
+    sessionsTitle.style.marginBottom = '12px';
+
+    const sessionsList = document.createElement('div');
+    sessionsList.className = 'project-task-list';
+
+    if (!task.timeEntries || task.timeEntries.length === 0) {
+      sessionsList.innerHTML = '<p style="text-align:center; color:var(--gray-500); padding:24px;">Nessuna sessione registrata per questa attività</p>';
+    } else {
+      // Sort sessions by date desc
+      [...task.timeEntries]
+        .sort((a, b) => b.start.localeCompare(a.start))
+        .forEach(entry => {
+          const entryHours = (entry.duration / 3600).toFixed(2);
+          const entryDate = new Date(entry.start);
+          const dateStr = entryDate.toLocaleDateString('it-IT', {
+            weekday: 'short',
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          });
+
+          const item = document.createElement('div');
+          item.className = 'project-task-item';
+
+          const info = document.createElement('div');
+          info.className = 'project-task-info';
+
+          const h4 = document.createElement('h4');
+          h4.textContent = entry.description || 'Sessione di lavoro';
+
+          const meta = document.createElement('div');
+          meta.className = 'project-task-meta';
+          meta.innerHTML = `📅 ${dateStr}`;
+
+          if (entry.notes) {
+            const notes = document.createElement('div');
+            notes.style.cssText = 'font-size: var(--text-xs); color: var(--gray-600); margin-top: 4px; font-style: italic;';
+            notes.textContent = entry.notes;
+            info.append(h4, meta, notes);
+          } else {
+            info.append(h4, meta);
+          }
+
+          const timeInfo = document.createElement('div');
+          timeInfo.className = 'project-task-time';
+
+          const hours = document.createElement('div');
+          hours.className = 'hours';
+          hours.textContent = `${entryHours}h`;
+
+          const label = document.createElement('div');
+          label.className = 'label';
+          label.textContent = 'Durata';
+
+          timeInfo.append(hours, label);
+
+          item.append(info, timeInfo);
+          sessionsList.appendChild(item);
+        });
+    }
+
+    sessionsSection.append(sessionsTitle, sessionsList);
+
+    body.innerHTML = '';
+    body.append(summary, sessionsSection);
+
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeProjectModal() {
+    const modal = $('#projectModal');
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  let charts = { donut:null, line:null, bar:null, timeByProject:null, timeByPriority:null };
+
+function renderStats(root) {
+    const wrap = document.createElement('div');
+    wrap.style.display='grid';
+    wrap.style.gap='16px';
+
+    // quick metrics
+    const total = state.tasks.length + state.completedTasks.length;
+    const opened = state.tasks.length;
+    const done = state.completedTasks.length;
+    const criticalOpen = state.tasks.filter(t=>t.priority==='critica').length;
+
+    // Calculate time metrics
+    const allTasks = [...state.tasks, ...state.completedTasks];
+    const totalTimeSeconds = allTasks.reduce((sum, t) => {
+      return sum + (t.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
+    }, 0);
+    const totalTimeHours = (totalTimeSeconds / 3600).toFixed(1);
+
+    const now = new Date();
+    const thisWeekStart = new Date(now);
+    thisWeekStart.setDate(now.getDate() - now.getDay());
+    thisWeekStart.setHours(0, 0, 0, 0);
+
+    const weekTimeSeconds = allTasks.reduce((sum, t) => {
+      return sum + (t.timeEntries || []).reduce((s, e) => {
+        const entryDate = new Date(e.start);
+        return entryDate >= thisWeekStart ? s + (e.duration || 0) : s;
+      }, 0);
+    }, 0);
+    const weekTimeHours = (weekTimeSeconds / 3600).toFixed(1);
+
+    wrap.innerHTML = `
+      <div class="stats">
+        <div class="stat"><div class="label">Totale</div><div class="value">${total}</div></div>
+        <div class="stat"><div class="label">In corso</div><div class="value">${opened}</div></div>
+        <div class="stat"><div class="label">Completate</div><div class="value">${done}</div></div>
+        <div class="stat"><div class="label">Critiche aperte</div><div class="value">${criticalOpen}</div></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="label">⏱️ Ore totali</div><div class="value">${totalTimeHours}h</div></div>
+        <div class="stat"><div class="label">⏱️ Ore settimana</div><div class="value">${weekTimeHours}h</div></div>
+        <div class="stat"><div class="label">⏱️ Media/task</div><div class="value">${total > 0 ? (totalTimeSeconds / total / 3600).toFixed(1) : 0}h</div></div>
+        <div class="stat"><div class="label">⏱️ Obiettivo sett.</div><div class="value">${state.weeklyGoalHours}h</div></div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-box">
+          <h4>Stato complessivo</h4>
+          <div class="chart-container"><canvas id="chDonut" class="stats-canvas"></canvas></div>
+          <table class="stats-table" aria-label="Tabella stato complessivo">
+            <tr><th>In corso</th><td>${opened}</td></tr>
+            <tr><th>Completate</th><td>${done}</td></tr>
+            <tr><th>Totale</th><td>${total}</td></tr>
+          </table>
+        </div>
+
+        <div class="chart-box">
+          <h4>Distribuzione priorità (aperte)</h4>
+          <div class="chart-container"><canvas id="chBar" class="stats-canvas"></canvas></div>
+          <table class="stats-table" aria-label="Tabella distribuzione priorità aperte">
+            ${['critica','alta','media','bassa'].map(p => {
+              const label = p.charAt(0).toUpperCase() + p.slice(1);
+              const count = state.tasks.filter(t=>t.priority===p).length;
+              return `<tr><th>${label}</th><td>${count}</td></tr>`;
+            }).join('')}
+          </table>
+        </div>
+
+        <div class="chart-box" style="grid-column: 1 / -1;">
+          <h4>Completamenti ultimi 14 giorni</h4>
+          <div class="chart-container"><canvas id="chLine" class="stats-canvas"></canvas></div>
+          <table class="stats-table" aria-label="Tabella completamenti ultimi 14 giorni">
+            ${(() => {
+              const days = [...Array(14)].map((_,i) => { const d=new Date(); d.setDate(d.getDate()-(13-i)); return d; });
+              const rows = days.map(d => {
+                const iso = d.toISOString().slice(0,10);
+                const count = state.completedTasks.filter(t => t.completedDate && t.completedDate.slice(0,10) === iso).length;
+                return `<tr><th>${d.toLocaleDateString('it-IT', { weekday:'short', day:'2-digit', month:'2-digit' })}</th><td>${count}</td></tr>`;
+              });
+              // summary row
+              const total14 = days.reduce((acc,d)=>{
+                const iso = d.toISOString().slice(0,10);
+                return acc + state.completedTasks.filter(t => t.completedDate && t.completedDate.slice(0,10) === iso).length;
+              },0);
+              rows.push(`<tr><th>Totale (14g)</th><td>${total14}</td></tr>`);
+              return rows.join('');
+            })()}
+          </table>
+        </div>
+
+        <div class="chart-box">
+          <h4>⏱️ Tempo per progetto (ore)</h4>
+          <div class="chart-container"><canvas id="chTimeByProject" class="stats-canvas"></canvas></div>
+          <table class="stats-table" aria-label="Tabella tempo per progetto">
+            ${(() => {
+              const timeByProject = {};
+              allTasks.forEach(t => {
+                const proj = t.project || 'Senza progetto';
+                const time = (t.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
+                timeByProject[proj] = (timeByProject[proj] || 0) + time;
+              });
+              return Object.entries(timeByProject)
+                .sort((a, b) => b[1] - a[1])
+                .map(([proj, secs]) => `<tr><th>${proj}</th><td>${(secs / 3600).toFixed(1)}h</td></tr>`)
+                .join('');
+            })()}
+          </table>
+        </div>
+
+        <div class="chart-box">
+          <h4>⏱️ Tempo per priorità (ore)</h4>
+          <div class="chart-container"><canvas id="chTimeByPriority" class="stats-canvas"></canvas></div>
+          <table class="stats-table" aria-label="Tabella tempo per priorità">
+            ${['critica', 'alta', 'media', 'bassa'].map(p => {
+              const time = allTasks
+                .filter(t => t.priority === p)
+                .reduce((sum, t) => sum + (t.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0), 0);
+              const label = p.charAt(0).toUpperCase() + p.slice(1);
+              return `<tr><th>${label}</th><td>${(time / 3600).toFixed(1)}h</td></tr>`;
+            }).join('')}
+          </table>
+        </div>
+      </div>
+    `;
+    root.appendChild(wrap);
+
+    // ----- Charts (smaller + responsive) -----
+    const donutData = [opened, done];
+
+    const ctx1 = document.getElementById('chDonut').getContext('2d');
+    charts.donut && charts.donut.destroy();
+    charts.donut = new Chart(ctx1, {
+      type: 'doughnut',
+      data: { labels: ['In corso', 'Completate'], datasets: [{ data: donutData, backgroundColor: ['#1d4ed8', '#22c55e'] }] },
+      options: { 
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        animation: false
+      }
+    });
+
+    // line: completate per giorno (ultimi 14 giorni)
+    const days = [...Array(14)].map((_,i) => { const d=new Date(); d.setDate(d.getDate()-(13-i)); return d; });
+    const labels = days.map(d => d.toLocaleDateString('it-IT', { day:'2-digit', month:'2-digit' }));
+    const completeCounts = days.map(d => {
+      const iso = d.toISOString().slice(0,10);
+      return state.completedTasks.filter(t => t.completedDate && t.completedDate.slice(0,10) === iso).length;
+    });
+    const ctx2 = document.getElementById('chLine').getContext('2d');
+    charts.line && charts.line.destroy();
+    charts.line = new Chart(ctx2, {
+      type: 'line',
+      data: { labels, datasets: [{ label: 'Completate', data: completeCounts, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.2)', tension: 0.25, fill: true }] },
+      options: { 
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } }, 
+        scales: { y: { beginAtZero: true, precision: 0 } },
+        animation: false
+      }
+    });
+
+    // bar: priorità aperte
+    const prios = ['critica','alta','media','bassa'];
+    const counts = prios.map(p => state.tasks.filter(t=>t.priority===p).length);
+    const ctx3 = document.getElementById('chBar').getContext('2d');
+    charts.bar && charts.bar.destroy();
+    charts.bar = new Chart(ctx3, {
+      type: 'bar',
+      data: { labels: prios.map(p=>p.toUpperCase()), datasets: [{ label:'Aperte', data: counts, backgroundColor: ['#dc2626','#f97316','#facc15','#22c55e'] }] },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { display:false } },
+        scales: { y: { beginAtZero:true, precision:0 } },
+        animation: false
+      }
+    });
+
+    // Time by project
+    const timeByProject = {};
+    allTasks.forEach(t => {
+      const proj = t.project || 'Senza progetto';
+      const time = (t.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0);
+      timeByProject[proj] = (timeByProject[proj] || 0) + time;
+    });
+    const projectLabels = Object.keys(timeByProject).sort((a, b) => timeByProject[b] - timeByProject[a]).slice(0, 8);
+    const projectHours = projectLabels.map(p => (timeByProject[p] / 3600).toFixed(1));
+
+    const ctx4 = document.getElementById('chTimeByProject').getContext('2d');
+    charts.timeByProject && charts.timeByProject.destroy();
+    charts.timeByProject = new Chart(ctx4, {
+      type: 'bar',
+      data: {
+        labels: projectLabels,
+        datasets: [{ label: 'Ore', data: projectHours, backgroundColor: '#1d4ed8' }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } },
+        animation: false
+      }
+    });
+
+    // Time by priority
+    const timeBypriority = prios.map(p => {
+      const time = allTasks
+        .filter(t => t.priority === p)
+        .reduce((sum, t) => sum + (t.timeEntries || []).reduce((s, e) => s + (e.duration || 0), 0), 0);
+      return (time / 3600).toFixed(1);
+    });
+
+    const ctx5 = document.getElementById('chTimeByPriority').getContext('2d');
+    charts.timeByPriority && charts.timeByPriority.destroy();
+    charts.timeByPriority = new Chart(ctx5, {
+      type: 'doughnut',
+      data: {
+        labels: prios.map(p => p.toUpperCase()),
+        datasets: [{ data: timeBypriority, backgroundColor: ['#dc2626','#f97316','#facc15','#22c55e'] }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        animation: false
+      }
+    });
+}
+
+  function renderSettings(root) {
+    const grid = document.createElement('div'); grid.className='settings-grid';
+
+    // Projects
+    const cardP = document.createElement('div'); cardP.className='settings-card';
+    cardP.innerHTML = `<h4>📂 Progetti</h4>`;
+    const listP = document.createElement('div'); state.projects.forEach(p => { const el=pill(p); const rm=btn('✖',()=>removeProject(p)); el.appendChild(rm); listP.appendChild(el); });
+    const addPwrap = document.createElement('div'); addPwrap.style.marginTop='8px'; addPwrap.style.display='flex'; addPwrap.style.gap='8px';
+    const inpP = document.createElement('input'); inpP.placeholder='Nuovo progetto'; inpP.className='field'; inpP.style.flex='1';
+    const addP = btn('Aggiungi', ()=>{ const v=inpP.value.trim(); if(!v) return; addProject(v); inpP.value=''; }); addP.classList.add('primary');
+    addPwrap.append(inpP, addP);
+    cardP.append(listP, addPwrap);
+
+    // People
+    const cardPe = document.createElement('div'); cardPe.className='settings-card';
+    cardPe.innerHTML = `<h4>👤 Persone</h4>`;
+    const listPe = document.createElement('div'); state.people.forEach(p => { const el=pill(p); const rm=btn('✖',()=>removePerson(p)); el.appendChild(rm); listPe.appendChild(el); });
+    const addPeWrap = document.createElement('div'); addPeWrap.style.marginTop='8px'; addPeWrap.style.display='flex'; addPeWrap.style.gap='8px';
+    const inpPe = document.createElement('input'); inpPe.placeholder='Nuova persona'; inpPe.className='field'; inpPe.style.flex='1';
+    const addPe = btn('Aggiungi', ()=>{ const v=inpPe.value.trim(); if(!v) return; addPerson(v); inpPe.value=''; }); addPe.classList.add('primary');
+    addPeWrap.append(inpPe, addPe);
+    cardPe.append(listPe, addPeWrap);
+
+    // Time Tracking Settings
+    const cardTime = document.createElement('div'); cardTime.className='settings-card';
+    cardTime.innerHTML = `<h4>⏱️ Impostazioni Tempo</h4>`;
+    const timeContent = document.createElement('div');
+    timeContent.style.display = 'grid';
+    timeContent.style.gap = '12px';
+
+    const roundingDiv = document.createElement('div');
+    roundingDiv.className = 'field';
+    const roundingLabel = document.createElement('label');
+    roundingLabel.textContent = 'Arrotondamento (minuti)';
+    const roundingSelect = document.createElement('select');
+    roundingSelect.innerHTML = `
+      <option value="0" ${state.roundingMinutes === 0 ? 'selected' : ''}>Nessuno</option>
+      <option value="5" ${state.roundingMinutes === 5 ? 'selected' : ''}>5 minuti</option>
+      <option value="10" ${state.roundingMinutes === 10 ? 'selected' : ''}>10 minuti</option>
+      <option value="15" ${state.roundingMinutes === 15 ? 'selected' : ''}>15 minuti</option>
+    `;
+    roundingSelect.addEventListener('change', (e) => {
+      state.roundingMinutes = parseInt(e.target.value, 10);
+      save();
+    });
+    roundingDiv.append(roundingLabel, roundingSelect);
+
+    const goalDiv = document.createElement('div');
+    goalDiv.className = 'field';
+    const goalLabel = document.createElement('label');
+    goalLabel.textContent = 'Obiettivo settimanale (ore)';
+    const goalInput = document.createElement('input');
+    goalInput.type = 'number';
+    goalInput.min = '0';
+    goalInput.step = '1';
+    goalInput.value = String(state.weeklyGoalHours);
+    goalInput.addEventListener('change', (e) => {
+      state.weeklyGoalHours = parseInt(e.target.value, 10) || 40;
+      save();
+      render();
+    });
+    goalDiv.append(goalLabel, goalInput);
+
+    timeContent.append(roundingDiv, goalDiv);
+    cardTime.appendChild(timeContent);
+
+    // Reset section
+    const cardReset = document.createElement('div');
+    cardReset.className = 'settings-card';
+    cardReset.style.gridColumn = '1 / -1';
+
+    const resetWarning = document.createElement('div');
+    resetWarning.className = 'reset-warning';
+
+    const resetTitle = document.createElement('h5');
+    resetTitle.innerHTML = '⚠️ Zona Pericolosa - Reset Dati';
+
+    const resetDesc = document.createElement('p');
+    resetDesc.textContent = 'Le operazioni di reset sono irreversibili. Assicurati di aver esportato i dati prima di procedere.';
+
+    const resetButtons = document.createElement('div');
+    resetButtons.className = 'reset-buttons';
+
+    const btnResetTasks = btn('🗑️ Reset Solo Task', () => confirmReset('tasks'), 'danger');
+    btnResetTasks.style.width = '100%';
+
+    const btnResetTime = btn('⏱️ Reset Solo Tempo', () => confirmReset('time'), 'warn');
+    btnResetTime.style.width = '100%';
+
+    const btnResetAll = btn('💣 Reset Completo (TUTTO)', () => confirmReset('all'), 'danger');
+    btnResetAll.style.width = '100%';
+    btnResetAll.style.fontWeight = '700';
+
+    const confirmText = document.createElement('div');
+    confirmText.className = 'reset-confirm-text';
+    confirmText.textContent = 'Ogni reset richiederà una conferma di sicurezza.';
+
+    resetButtons.append(btnResetTasks, btnResetTime, btnResetAll, confirmText);
+    resetWarning.append(resetTitle, resetDesc, resetButtons);
+    cardReset.appendChild(resetWarning);
+
+    grid.append(cardP, cardPe, cardTime, cardReset);
+    root.appendChild(grid);
+  }
+
+  function btn(label, onClick, kind) {
+    const b = document.createElement('button'); b.className='btn' + (kind? ' ' + kind : ''); b.textContent=label; b.addEventListener('click', onClick); return b;
+  }
+
+  // ==============================
+  //  ACTIONS (CRUD + FILTERS)
+  // ==============================
+  function addTask(partial) {
+    const t = {
+      id: genId(),
+      title: partial.title.trim(),
+      project: partial.project || '',
+      assignee: partial.assignee || '',
+      priority: partial.priority || 'bassa',
+      progress: clamp(parseInt(partial.progress||0,10), 0, 100),
+      dueDate: partial.dueDate || null,
+      notes: partial.notes || '',
+      estimatedTime: partial.estimatedTime ? parseFloat(partial.estimatedTime) * 3600 : 0, // hours to seconds
+      timeEntries: [],
+      activeTimer: null
+    };
+    state.tasks.push(t); save(); render();
+  }
+
+  function updateTask(id, updates) {
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    if (updates.estimatedTime !== undefined) {
+      updates.estimatedTime = parseFloat(updates.estimatedTime) * 3600; // hours to seconds
+    }
+    Object.assign(t, updates);
+    t.progress = clamp(parseInt(t.progress||0,10), 0, 100);
+    save(); render();
+  }
+
+  function onDelete(id) {
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    if (confirm(`Eliminare definitivamente "${t.title}"?`)) {
+      state.tasks = state.tasks.filter(x => x.id !== id);
+      save(); render();
+    }
+  }
+
+  function onUpdateProgress(id, delta) {
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    t.progress = clamp((t.progress||0) + delta, 0, 100);
+    save(); render();
+  }
+
+  function onComplete(id) {
+    const idx = state.tasks.findIndex(x => x.id === id);
+    if (idx === -1) return;
+    const t = state.tasks.splice(idx,1)[0];
+    t.progress = 100; t.completedDate = new Date().toISOString();
+    state.completedTasks.push(t);
+    save(); render();
+  }
+
+  function onRestore(id) {
+    const idx = state.completedTasks.findIndex(x => x.id === id);
+    if (idx === -1) return;
+    const t = state.completedTasks.splice(idx,1)[0];
+    t.progress = Math.min(90, t.progress||0); delete t.completedDate;
+    state.tasks.push(t);
+    save(); render();
+  }
+
+  function setTab(tab) { state.tab = tab; render(); }
+
+  function setFilters(partial) { state.filters = { ...state.filters, ...partial }; render(); }
+  function setQuery(q) { state.q = q; render(); }
+  function clearFilters() { state.filters={priority:'all', due:'all'}; state.q=''; $('#q').value=''; $('#fPrio').value='all'; $('#fDue').value='all'; render(); }
+
+  // ==============================
+  //  IMPORT/EXPORT
+  // ==============================
+  function exportData() {
+    const data = { tasks: state.tasks, completedTasks: state.completedTasks, projects: state.projects, people: state.people, exportedAt: new Date().toISOString() };
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'task_manager_export.json'; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function validateImportData(data) {
+    if (typeof data !== 'object' || !data) return false;
+    if (!('tasks' in data) || !('completedTasks' in data)) return false;
+    return Array.isArray(data.tasks) && Array.isArray(data.completedTasks);
+  }
+
+  function importData(json, mode='merge') {
+    let data;
+    try { data = JSON.parse(json); } catch { alert('JSON non valido'); return; }
+    if (!validateImportData(data)) { alert('Struttura dati non valida'); return; }
+
+    if (mode === 'replace') {
+      state.tasks = data.tasks || [];
+      state.completedTasks = data.completedTasks || [];
+      state.projects = data.projects && data.projects.length ? data.projects : state.projects;
+      state.people = data.people && data.people.length ? data.people : state.people;
+    } else {
+      // merge: concat e dedup per id
+      const byId = new Map();
+      [...state.tasks, ...data.tasks].forEach(t => byId.set(t.id, t));
+      state.tasks = [...byId.values()].filter(t => !t.completedDate);
+
+      const byIdC = new Map();
+      [...state.completedTasks, ...data.completedTasks].forEach(t => byIdC.set(t.id, t));
+      state.completedTasks = [...byIdC.values()].filter(t => t.completedDate);
+
+      // unione liste
+      state.projects = Array.from(new Set([...(data.projects||[]), ...state.projects]));
+      state.people = Array.from(new Set([...(data.people||[]), ...state.people]));
+    }
+    save(); render();
+  }
+
+  // ==============================
+  //  SETTINGS ACTIONS
+  // ==============================
+  function addProject(p) { if (!state.projects.includes(p)) { state.projects.push(p); save(); render(); } }
+  function removeProject(p) {
+    if (!confirm(`Rimuovere il progetto "${p}"?`)) return;
+    state.projects = state.projects.filter(x => x !== p);
+    // pulizia tasks associati? no, manteniamo il valore testuale
+    save(); render();
+  }
+  function addPerson(p) { if (!state.people.includes(p)) { state.people.push(p); save(); render(); } }
+  function removePerson(p) {
+    if (!confirm(`Rimuovere la persona "${p}"?`)) return;
+    state.people = state.people.filter(x => x !== p);
+    save(); render();
+  }
+
+  // ==============================
+  //  RESET FUNCTIONS
+  // ==============================
+  function confirmReset(type) {
+    let message, confirmWord, action;
+
+    if (type === 'tasks') {
+      message = '⚠️ ATTENZIONE!\n\nQuesta operazione cancellerà TUTTE le task (aperte e completate) ma manterrà:\n- Tutti i dati tempo registrati\n- Progetti e persone\n- Impostazioni\n\nQuesta azione è IRREVERSIBILE!\n\nScrivi "CANCELLA TASK" per confermare:';
+      confirmWord = 'CANCELLA TASK';
+      action = resetTasks;
+    } else if (type === 'time') {
+      message = '⚠️ ATTENZIONE!\n\nQuesta operazione cancellerà TUTTI i dati tempo (sessioni, timer) da TUTTE le task ma manterrà:\n- Le task stesse\n- Progetti e persone\n- Impostazioni\n\nQuesta azione è IRREVERSIBILE!\n\nScrivi "CANCELLA TEMPO" per confermare:';
+      confirmWord = 'CANCELLA TEMPO';
+      action = resetTime;
+    } else if (type === 'all') {
+      message = '🚨 ATTENZIONE MASSIMA! 🚨\n\nQuesta operazione cancellerà TUTTO:\n- TUTTE le task (aperte e completate)\n- TUTTI i dati tempo\n- TUTTI i progetti personalizzati\n- TUTTE le persone personalizzate\n- Riporterà tutto allo stato iniziale\n\nQuesta azione è IRREVERSIBILE!\n\nScrivi "RESET COMPLETO" per confermare:';
+      confirmWord = 'RESET COMPLETO';
+      action = resetAll;
+    }
+
+    const userInput = prompt(message);
+
+    if (userInput === confirmWord) {
+      // Double confirmation
+      const doubleConfirm = confirm('Sei ASSOLUTAMENTE sicuro? Questa è l\'ultima conferma prima della cancellazione definitiva.');
+      if (doubleConfirm) {
+        action();
+        alert('✅ Reset completato con successo.');
+      } else {
+        alert('Reset annullato.');
+      }
+    } else if (userInput !== null) {
+      alert('❌ Conferma non corretta. Reset annullato per sicurezza.');
+    }
+  }
+
+  function resetTasks() {
+    state.tasks = [];
+    state.completedTasks = [];
+
+    // Stop any active timer
+    if (state.activeTimerId) {
+      if (timerInterval) clearInterval(timerInterval);
+      state.activeTimerId = null;
+    }
+
+    save();
+    render();
+  }
+
+  function resetTime() {
+    // Remove all time entries from all tasks
+    [...state.tasks, ...state.completedTasks].forEach(task => {
+      task.timeEntries = [];
+      task.activeTimer = null;
+    });
+
+    // Stop any active timer
+    if (state.activeTimerId) {
+      if (timerInterval) clearInterval(timerInterval);
+      state.activeTimerId = null;
+    }
+
+    save();
+    render();
+  }
+
+  function resetAll() {
+    // Reset everything to initial state
+    state.tasks = [];
+    state.completedTasks = [];
+    state.projects = [...defaultProjects];
+    state.people = [...defaultPeoples];
+    state.activeTimerId = null;
+    state.roundingMinutes = 0;
+    state.weeklyGoalHours = 40;
+
+    // Stop any active timer
+    if (timerInterval) clearInterval(timerInterval);
+
+    // Clear localStorage completely
+    localStorage.removeItem(STORAGE_KEY);
+
+    save();
+    render();
+  }
+
+  // ==============================
+  //  MODAL & FORM HANDLING
+  // ==============================
+  const modal = $('#modal');
+  const modalTitle = $('#modalTitle');
+  const f = {
+    id: $('#taskId'),
+    title: $('#title'),
+    project: $('#project'),
+    assignee: $('#assignee'),
+    priority: $('#priority'),
+    progress: $('#progress'),
+    dueDate: $('#dueDate'),
+    notes: $('#notes'),
+  };
+
+  function openModal(task=null) {
+    modal.classList.add('open'); modal.setAttribute('aria-hidden','false');
+    // populate selects
+    f.project.innerHTML = `<option value="">—</option>` + state.projects.map(p=>`<option>${p}</option>`).join('');
+    f.assignee.innerHTML = `<option value="">—</option>` + state.people.map(p=>`<option>${p}</option>`).join('');
+
+    if (task) {
+      modalTitle.textContent = '✏️ Modifica attività';
+      f.id.value = String(task.id);
+      f.title.value = task.title;
+      f.project.value = task.project || '';
+      f.assignee.value = task.assignee || '';
+      f.priority.value = task.priority || 'bassa';
+      f.progress.value = String(task.progress||0);
+      f.dueDate.value = task.dueDate || '';
+      $('#estimatedTime').value = task.estimatedTime ? (task.estimatedTime / 3600).toFixed(1) : '';
+      f.notes.value = task.notes || '';
+    } else {
+      modalTitle.textContent = '➕ Nuova attività';
+      f.id.value = '';
+      f.title.value = '';
+      f.project.value = '';
+      f.assignee.value = '';
+      f.priority.value = 'bassa';
+      f.progress.value = '0';
+      f.dueDate.value = '';
+      $('#estimatedTime').value = '';
+      f.notes.value = '';
+    }
+    setTimeout(() => f.title.focus(), 0);
+  }
+  function closeModal() { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
+
+  $('#modalClose').addEventListener('click', closeModal);
+  $('#btnAnnulla').addEventListener('click', (e)=>{ e.preventDefault(); closeModal(); });
+  $('#taskForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    if (!f.title.value.trim()) { alert('Il titolo è obbligatorio'); f.title.focus(); return; }
+    const payload = {
+      title: f.title.value,
+      project: f.project.value,
+      assignee: f.assignee.value,
+      priority: f.priority.value,
+      progress: parseInt(f.progress.value||'0',10),
+      dueDate: f.dueDate.value || null,
+      estimatedTime: $('#estimatedTime').value || 0,
+      notes: f.notes.value
+    };
+    const id = f.id.value ? parseInt(f.id.value,10) : null;
+    if (id) updateTask(id, payload); else addTask(payload);
+    closeModal();
+  });
+
+  // Time Entry Modal
+  $('#timeModalClose').addEventListener('click', closeTimeModal);
+  $('#btnTimeCancel').addEventListener('click', (e) => { e.preventDefault(); closeTimeModal(); });
+  $('#timeEntryForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const taskId = parseInt($('#entryTaskId').value, 10);
+    const entryId = $('#entryId').value ? parseInt($('#entryId').value, 10) : null;
+    const entryData = {
+      id: entryId,
+      date: $('#entryDate').value,
+      duration: $('#entryDuration').value,
+      description: $('#entryDescription').value.trim(),
+      notes: $('#entryNotes').value.trim()
+    };
+    if (!entryData.description) {
+      alert('La descrizione è obbligatoria');
+      $('#entryDescription').focus();
+      return;
+    }
+    saveTimeEntry(taskId, entryData);
+    closeTimeModal();
+  });
+
+  // Project Modal
+  $('#projectModalClose').addEventListener('click', closeProjectModal);
+
+  // ==============================
+  //  EVENT LISTENERS (UI)
+  // ==============================
+  $('#btnNuovo').addEventListener('click', () => openModal());
+  $('#btnEsporta').addEventListener('click', exportData);
+  $('#btnImporta').addEventListener('click', () => $('#fileImport').click());
+  $('#fileImport').addEventListener('change', (e)=>{
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const mode = prompt('Modalità import: "merge" (default) o "replace"?', 'merge') || 'merge';
+      importData(String(reader.result), mode === 'replace' ? 'replace' : 'merge');
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  $$('.tab').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+
+  $('#q').addEventListener('input', (e)=> setQuery(e.target.value));
+  $('#fPrio').addEventListener('change', (e)=> setFilters({ priority: e.target.value }));
+  $('#fDue').addEventListener('change', (e)=> setFilters({ due: e.target.value }));
+  $('#btnPulisciFiltri').addEventListener('click', clearFilters);
+
+  // ==============================
+  //  TIME TRACKING FUNCTIONS
+  // ==============================
+  function formatDuration(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function startTimer(taskId) {
+    // Stop any active timer first
+    if (state.activeTimerId && state.activeTimerId !== taskId) {
+      stopTimer(state.activeTimerId);
+    }
+
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    task.activeTimer = { start: new Date().toISOString() };
+    state.activeTimerId = taskId;
+
+    // Start interval to update display
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      const el = $(`#timer-${taskId}`);
+      if (el && task.activeTimer) {
+        const elapsed = Math.floor((Date.now() - new Date(task.activeTimer.start).getTime()) / 1000);
+        el.textContent = formatDuration(elapsed);
+      }
+    }, 1000);
+
+    save();
+    render();
+  }
+
+  function stopTimer(taskId) {
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task || !task.activeTimer) return;
+
+    const start = new Date(task.activeTimer.start);
+    const end = new Date();
+    const duration = Math.floor((end - start) / 1000);
+
+    // Apply rounding if enabled
+    let finalDuration = duration;
+    if (state.roundingMinutes > 0) {
+      const roundSeconds = state.roundingMinutes * 60;
+      finalDuration = Math.ceil(duration / roundSeconds) * roundSeconds;
+    }
+
+    // Prompt for description
+    const description = prompt('Descrizione attività svolta:', '');
+    if (description === null) {
+      // User cancelled
+      task.activeTimer = null;
+      state.activeTimerId = null;
+      if (timerInterval) clearInterval(timerInterval);
+      save();
+      render();
+      return;
+    }
+
+    // Create time entry
+    const entry = {
+      id: genId(),
+      start: task.activeTimer.start,
+      end: end.toISOString(),
+      duration: finalDuration,
+      description: description.trim() || 'Sessione di lavoro',
+      notes: ''
+    };
+
+    if (!task.timeEntries) task.timeEntries = [];
+    task.timeEntries.push(entry);
+
+    task.activeTimer = null;
+    state.activeTimerId = null;
+
+    if (timerInterval) clearInterval(timerInterval);
+
+    save();
+    render();
+  }
+
+  function openTimeModal(taskId, entryId = null) {
+    const timeModal = $('#timeModal');
+    const task = state.tasks.find(t => t.id === taskId) || state.completedTasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    timeModal.classList.add('open');
+    timeModal.setAttribute('aria-hidden', 'false');
+
+    $('#entryTaskId').value = String(taskId);
+
+    if (entryId) {
+      // Edit mode
+      const entry = (task.timeEntries || []).find(e => e.id === entryId);
+      if (!entry) return;
+
+      $('#timeModalTitle').textContent = '✏️ Modifica Sessione';
+      $('#entryId').value = String(entryId);
+      $('#entryDate').value = entry.start.slice(0, 10);
+      $('#entryDuration').value = (entry.duration / 3600).toFixed(2);
+      $('#entryDescription').value = entry.description || '';
+      $('#entryNotes').value = entry.notes || '';
+    } else {
+      // New mode
+      $('#timeModalTitle').textContent = '➕ Aggiungi Sessione';
+      $('#entryId').value = '';
+      $('#entryDate').value = todayISO();
+      $('#entryDuration').value = '';
+      $('#entryDescription').value = '';
+      $('#entryNotes').value = '';
+    }
+
+    setTimeout(() => $('#entryDuration').focus(), 0);
+  }
+
+  function closeTimeModal() {
+    const timeModal = $('#timeModal');
+    timeModal.classList.remove('open');
+    timeModal.setAttribute('aria-hidden', 'true');
+  }
+
+  function saveTimeEntry(taskId, entryData) {
+    const task = state.tasks.find(t => t.id === taskId) || state.completedTasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    if (!task.timeEntries) task.timeEntries = [];
+
+    const duration = parseFloat(entryData.duration) * 3600; // hours to seconds
+    const startISO = entryData.date + 'T12:00:00'; // midday
+
+    if (entryData.id) {
+      // Update existing
+      const entry = task.timeEntries.find(e => e.id === entryData.id);
+      if (entry) {
+        entry.start = startISO;
+        entry.duration = duration;
+        entry.description = entryData.description;
+        entry.notes = entryData.notes;
+      }
+    } else {
+      // Create new
+      const entry = {
+        id: genId(),
+        start: startISO,
+        end: startISO,
+        duration: duration,
+        description: entryData.description,
+        notes: entryData.notes
+      };
+      task.timeEntries.push(entry);
+    }
+
+    save();
+    render();
+  }
+
+  function deleteTimeEntry(taskId, entryId) {
+    const task = state.tasks.find(t => t.id === taskId) || state.completedTasks.find(t => t.id === taskId);
+    if (!task || !task.timeEntries) return;
+
+    if (confirm('Eliminare questa sessione?')) {
+      task.timeEntries = task.timeEntries.filter(e => e.id !== entryId);
+      save();
+      render();
+    }
+  }
+
+  function renderTimesheet(root) {
+    const wrap = document.createElement('div');
+
+    // Filters
+    const filters = document.createElement('div');
+    filters.className = 'timesheet-filters';
+    filters.innerHTML = `
+      <div class="field">
+        <label for="tsDateRange">Periodo</label>
+        <select id="tsDateRange">
+          <option value="all">Tutto</option>
+          <option value="today">Oggi</option>
+          <option value="week" selected>Questa settimana</option>
+          <option value="month">Questo mese</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="tsProject">Progetto</label>
+        <select id="tsProject">
+          <option value="all">Tutti</option>
+          ${state.projects.map(p => `<option value="${p}">${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label for="tsTask">Task</label>
+        <select id="tsTask">
+          <option value="all">Tutte</option>
+          ${[...state.tasks, ...state.completedTasks].map(t => `<option value="${t.id}">${t.title}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <button id="btnExportCSV" class="btn">📥 Esporta CSV</button>
+      </div>
+    `;
+
+    // Collect all time entries
+    const allEntries = [];
+    [...state.tasks, ...state.completedTasks].forEach(task => {
+      if (task.timeEntries && task.timeEntries.length) {
+        task.timeEntries.forEach(entry => {
+          allEntries.push({ ...entry, task });
+        });
+      }
+    });
+
+    // Sort by date desc
+    allEntries.sort((a, b) => b.start.localeCompare(a.start));
+
+    // Build table
+    const table = document.createElement('table');
+    table.className = 'timesheet-table';
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Task</th>
+          <th>Progetto</th>
+          <th>Descrizione</th>
+          <th>Durata</th>
+          <th>Azioni</th>
+        </tr>
+      </thead>
+      <tbody id="timesheetBody"></tbody>
+    `;
+
+    const tbody = table.querySelector('#timesheetBody');
+
+    if (allEntries.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--gray-500);">Nessuna sessione registrata</td></tr>';
+    } else {
+      allEntries.forEach(entry => {
+        const row = document.createElement('tr');
+        const dateStr = new Date(entry.start).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const durationHours = (entry.duration / 3600).toFixed(2);
+
+        row.innerHTML = `
+          <td>${dateStr}</td>
+          <td><strong>${entry.task.title}</strong></td>
+          <td>${entry.task.project || '—'}</td>
+          <td><span class="time-entry-desc">${entry.description}</span></td>
+          <td><span class="duration-badge">${durationHours}h</span></td>
+          <td>
+            <button class="btn btn-edit-entry" data-task-id="${entry.task.id}" data-entry-id="${entry.id}" title="Modifica">✏️</button>
+            <button class="btn danger btn-delete-entry" data-task-id="${entry.task.id}" data-entry-id="${entry.id}" title="Elimina">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Summary
+    const totalSeconds = allEntries.reduce((sum, e) => sum + e.duration, 0);
+    const totalHours = (totalSeconds / 3600).toFixed(2);
+
+    const summary = document.createElement('div');
+    summary.style.cssText = 'margin-top:16px; padding:16px; background:white; border:1px solid var(--gray-200); border-radius:var(--radius-lg); display:flex; gap:24px;';
+    summary.innerHTML = `
+      <div><strong>Totale sessioni:</strong> ${allEntries.length}</div>
+      <div><strong>Ore totali:</strong> ${totalHours}h</div>
+      <div><strong>Media per sessione:</strong> ${allEntries.length > 0 ? ((totalSeconds / allEntries.length) / 3600).toFixed(2) : 0}h</div>
+    `;
+
+    wrap.append(filters, table, summary);
+    root.appendChild(wrap);
+
+    // Event listener for CSV export
+    $('#btnExportCSV').addEventListener('click', () => exportTimesheetCSV(allEntries));
+
+    // Filter listeners (basic implementation, could be enhanced)
+    $('#tsDateRange').addEventListener('change', () => render());
+    $('#tsProject').addEventListener('change', () => render());
+    $('#tsTask').addEventListener('change', () => render());
+
+    // Event delegation for edit/delete buttons
+    tbody.addEventListener('click', (e) => {
+      const target = e.target.closest('.btn-edit-entry, .btn-delete-entry');
+      if (!target) return;
+
+      const taskId = parseInt(target.dataset.taskId, 10);
+      const entryId = parseInt(target.dataset.entryId, 10);
+
+      if (target.classList.contains('btn-edit-entry')) {
+        openTimeModal(taskId, entryId);
+      } else if (target.classList.contains('btn-delete-entry')) {
+        deleteTimeEntry(taskId, entryId);
+      }
+    });
+  }
+
+  function exportTimesheetCSV(entries) {
+    const headers = ['Data', 'Task', 'Progetto', 'Assegnatario', 'Descrizione', 'Durata (ore)', 'Note'];
+    const rows = entries.map(e => {
+      const date = new Date(e.start).toLocaleDateString('it-IT');
+      const hours = (e.duration / 3600).toFixed(2);
+      return [date, e.task.title, e.task.project || '', e.task.assignee || '', e.description, hours, e.notes || ''];
+    });
+
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `timesheet_${todayISO()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ==============================
+  //  HELPERS
+  // ==============================
+  function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+  // ==============================
+  //  INIT
+  // ==============================
+  setToday();
+  load();
+  render();
+
+  </script>
+</body>
+</html>
