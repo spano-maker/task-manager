@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Manager con Time Tracking - Presentazione</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='15' width='80' height='70' rx='8' fill='%231d4ed8'/><rect x='20' y='30' width='30' height='4' rx='2' fill='white'/><rect x='20' y='45' width='45' height='4' rx='2' fill='white'/><rect x='20' y='60' width='25' height='4' rx='2' fill='white'/><circle cx='75' cy='55' r='18' fill='%2322c55e'/><path d='M75 42 v13 h9' stroke='white' stroke-width='3' stroke-linecap='round' fill='none'/></svg>" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #1d4ed8 0%, #7c3aed 100%);
+      color: white;
+      padding: 60px 40px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .hero .subtitle {
+      font-size: 1.5rem;
+      opacity: 0.9;
+      margin-bottom: 30px;
+    }
+
+    .hero .version {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      padding: 8px 20px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      margin-bottom: 30px;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+
+    .btn {
+      padding: 15px 40px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .btn-primary {
+      background: white;
+      color: #1d4ed8;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 2px solid white;
+    }
+
+    .content {
+      padding: 60px 40px;
+    }
+
+    .section {
+      margin-bottom: 60px;
+    }
+
+    .section h2 {
+      font-size: 2rem;
+      color: #1d4ed8;
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-top: 30px;
+    }
+
+    .feature-card {
+      padding: 30px;
+      background: #f9fafb;
+      border-radius: 15px;
+      border: 2px solid #e5e7eb;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      border-color: #1d4ed8;
+    }
+
+    .feature-card .icon {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+    }
+
+    .feature-card h3 {
+      font-size: 1.3rem;
+      margin-bottom: 10px;
+      color: #1d4ed8;
+    }
+
+    .feature-card p {
+      color: #6b7280;
+      line-height: 1.6;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 15px;
+    }
+
+    .stat-card .number {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .stat-card .label {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
+    .screenshot {
+      background: #f3f4f6;
+      padding: 40px;
+      border-radius: 15px;
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .screenshot-placeholder {
+      background: white;
+      border: 3px dashed #d1d5db;
+      border-radius: 10px;
+      padding: 80px 40px;
+      color: #9ca3af;
+      font-size: 1.2rem;
+    }
+
+    .tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .tech-badge {
+      padding: 10px 20px;
+      background: #1d4ed8;
+      color: white;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .download-section {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 50px;
+      border-radius: 15px;
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .download-section h2 {
+      color: white;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+
+    .download-section p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+      margin-bottom: 30px;
+    }
+
+    .file-list {
+      background: white;
+      color: #333;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: left;
+      max-width: 600px;
+      margin: 30px auto;
+    }
+
+    .file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .file-item:last-child {
+      border-bottom: none;
+    }
+
+    .file-name {
+      font-family: 'Courier New', monospace;
+      color: #1d4ed8;
+      font-weight: 600;
+    }
+
+    .file-size {
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px;
+      background: #1f2937;
+      color: white;
+    }
+
+    footer a {
+      color: #60a5fa;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .hero .subtitle {
+        font-size: 1.2rem;
+      }
+
+      .content {
+        padding: 40px 20px;
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Hero Section -->
+    <div class="hero">
+      <div class="version">v1.0.0 - Versione Standalone</div>
+      <h1>🗂️ Task Manager<br>con Time Tracking</h1>
+      <p class="subtitle">Gestione task professionale con tracciamento tempo integrato</p>
+      <p style="margin-top: 20px; opacity: 0.9;">
+        Zero installazione • Zero configurazione • 100% Offline • Privacy garantita
+      </p>
+
+      <div class="cta-buttons">
+        <a href="index.html" class="btn btn-primary">
+          🚀 Apri Applicazione
+        </a>
+        <a href="#download" class="btn btn-secondary">
+          📥 Scarica Package
+        </a>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat-card">
+          <div class="number">48KB</div>
+          <div class="label">Package ZIP</div>
+        </div>
+        <div class="stat-card">
+          <div class="number">1</div>
+          <div class="label">File Necessario</div>
+        </div>
+        <div class="stat-card">
+          <div class="number">0</div>
+          <div class="label">Dipendenze Locali</div>
+        </div>
+        <div class="stat-card">
+          <div class="number">100%</div>
+          <div class="label">Open Source</div>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div class="section">
+        <h2>✨ Funzionalità Principali</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="icon">⏱️</div>
+            <h3>Time Tracking Automatico</h3>
+            <p>Timer start/stop in tempo reale, sessioni manuali, arrotondamento configurable. Progresso automatico basato sul tempo registrato.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="icon">📊</div>
+            <h3>Dashboard & Analytics</h3>
+            <p>Grafici interattivi, statistiche avanzate, tempo per progetto e priorità. Visualizza dove va il tuo tempo.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="icon">📋</div>
+            <h3>Gestione Task Completa</h3>
+            <p>CRUD completo, 4 livelli priorità, assegnazione team, organizzazione per progetti, filtri avanzati.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="icon">📈</div>
+            <h3>Progresso Intelligente</h3>
+            <p>Barra progresso collegata al tempo. Blu (ok), verde (completato), rosso (sforato). Tutto automatico.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="icon">📑</div>
+            <h3>Timesheet Professionale</h3>
+            <p>Tabella completa sessioni con filtri, export CSV per Excel, statistiche riepilogative.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="icon">🔒</div>
+            <h3>Privacy Totale</h3>
+            <p>Dati solo nel tuo browser. Zero server, zero telemetria, zero tracking. 100% privato e sicuro.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tech Stack -->
+      <div class="section">
+        <h2>🛠️ Stack Tecnologico</h2>
+        <div class="tech-stack">
+          <span class="tech-badge">HTML5</span>
+          <span class="tech-badge">CSS3</span>
+          <span class="tech-badge">Vanilla JavaScript ES6+</span>
+          <span class="tech-badge">Chart.js v4</span>
+          <span class="tech-badge">LocalStorage API</span>
+          <span class="tech-badge">Responsive Design</span>
+          <span class="tech-badge">PWA Ready</span>
+        </div>
+        <p style="margin-top: 20px; color: #6b7280;">
+          Nessun framework pesante, nessun build tool, nessuna configurazione. Solo un file HTML che funziona ovunque.
+        </p>
+      </div>
+
+      <!-- Screenshot -->
+      <div class="section">
+        <h2>🎨 Interfaccia</h2>
+        <div class="screenshot">
+          <div class="screenshot-placeholder">
+            <p>📸 Dashboard con task cards, timer, grafici e statistiche</p>
+            <p style="font-size: 0.9rem; margin-top: 10px;">Design moderno, intuitivo e responsive</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Use Cases -->
+      <div class="section">
+        <h2>🎯 Perfetto Per</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="icon">💼</div>
+            <h3>Freelancer</h3>
+            <p>Traccia tempo per clienti diversi, genera report, gestisci progetti multipli.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="icon">👥</div>
+            <h3>Team Piccoli</h3>
+            <p>Coordinamento semplice senza overhead di tool enterprise complessi.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="icon">🎓</div>
+            <h3>Studenti</h3>
+            <p>Gestione progetti universitari, studio, tracking tempo dedicato a materie.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="icon">✈️</div>
+            <h3>Uso Offline</h3>
+            <p>Perfetto per treni, aerei, luoghi senza connessione. Funziona sempre.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Download Section -->
+      <div id="download" class="download-section">
+        <h2>📦 Scarica il Package Completo</h2>
+        <p>Tutto quello che ti serve in un unico file ZIP</p>
+
+        <div class="file-list">
+          <h3 style="margin-bottom: 20px;">📂 Contenuto Package (48KB):</h3>
+          <div class="file-item">
+            <span class="file-name">index.html</span>
+            <span class="file-size">85KB - App principale</span>
+          </div>
+          <div class="file-item">
+            <span class="file-name">index.backup.html</span>
+            <span class="file-size">85KB - Backup</span>
+          </div>
+          <div class="file-item">
+            <span class="file-name">README.md</span>
+            <span class="file-size">13KB - Docs completa</span>
+          </div>
+          <div class="file-item">
+            <span class="file-name">GUIDA_RAPIDA.md</span>
+            <span class="file-size">6KB - Tutorial ITA</span>
+          </div>
+          <div class="file-item">
+            <span class="file-name">esempio_dati.json</span>
+            <span class="file-size">3KB - Dati demo</span>
+          </div>
+          <div class="file-item">
+            <span class="file-name">LICENSE</span>
+            <span class="file-size">1KB - MIT License</span>
+          </div>
+        </div>
+
+        <div class="cta-buttons">
+          <a href="task-manager-standalone-v1.0.0.zip" class="btn btn-primary" download>
+            📥 Download ZIP (48KB)
+          </a>
+          <a href="https://github.com/spano-maker/task-manager" class="btn btn-secondary" target="_blank">
+            🔗 Vedi su GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p><strong>Task Manager v1.0.0</strong></p>
+      <p style="margin: 15px 0;">
+        Fatto con ❤️ per semplificare il time tracking
+      </p>
+      <p>
+        <a href="LICENSE">MIT License</a> •
+        <a href="README.md">Documentazione</a> •
+        <a href="https://github.com/spano-maker/task-manager">GitHub</a>
+      </p>
+      <p style="margin-top: 20px; opacity: 0.7; font-size: 0.9rem;">
+        © 2025 - Nessun cookie, nessun tracking, nessun dato raccolto
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    // Smooth scroll per anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
