@@ -3,425 +3,418 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Scan360 - Analisi Centrale Rischi</title>
-  <meta name="description" content="Scan360 CR Technology - Analisi intelligente dei certificati di Centrale Rischi Banca d'Italia" />
+  <title>Scan360 - Analisi Centrale Rischi Banca d'Italia</title>
+  <meta name="description" content="Scan360 CR Technology - Analisi certificati Centrale Rischi Banca d'Italia" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
 
-  <!-- PDF.js per lettura PDF -->
+  <!-- PDF.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <!-- Tesseract.js per OCR -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-  <!-- Chart.js per grafici -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
   <style>
     :root {
-      --primary: #0066cc;
-      --primary-dark: #004999;
-      --secondary: #00a86b;
-      --danger: #dc3545;
-      --warning: #ffc107;
-      --info: #17a2b8;
-      --dark: #1a1a2e;
-      --gray-50: #f8f9fa;
-      --gray-100: #f1f3f5;
-      --gray-200: #e9ecef;
-      --gray-300: #dee2e6;
-      --gray-500: #6c757d;
-      --gray-700: #495057;
-      --gray-900: #212529;
-      --radius: 12px;
-      --shadow: 0 4px 20px rgba(0,0,0,0.08);
-      --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
+      --primary: #1a365d;
+      --primary-light: #2c5282;
+      --accent: #c53030;
+      --success: #276749;
+      --warning: #c05621;
+      --info: #2b6cb0;
+      --bg: #f7fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1a202c;
+      --text-muted: #718096;
+      --radius: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1);
+      --shadow-lg: 0 4px 15px rgba(0,0,0,0.1);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
-      min-height: 100vh;
-      color: var(--gray-900);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
     }
 
-    /* Header */
+    /* Header Banca d'Italia style */
     .header {
-      background: linear-gradient(135deg, var(--dark) 0%, #16213e 100%);
+      background: var(--primary);
       color: white;
       padding: 1rem 2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: var(--shadow);
+      border-bottom: 4px solid var(--accent);
     }
 
     .logo {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 15px;
     }
 
     .logo-icon {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      border-radius: 12px;
+      width: 50px;
+      height: 50px;
+      background: white;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
+      font-weight: bold;
+      color: var(--primary);
+      font-size: 1.2rem;
     }
 
     .logo-text h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
+      font-size: 1.4rem;
+      font-weight: 600;
     }
 
     .logo-text span {
       font-size: 0.75rem;
       opacity: 0.8;
-      text-transform: uppercase;
-      letter-spacing: 2px;
     }
 
-    .header-actions {
-      display: flex;
-      gap: 12px;
-    }
-
-    /* Main Container */
     .container {
       max-width: 1400px;
       margin: 0 auto;
-      padding: 2rem;
+      padding: 1.5rem;
     }
 
-    /* Upload Zone */
-    .upload-zone {
-      background: white;
-      border: 3px dashed var(--gray-300);
+    /* Upload Area */
+    .upload-section {
+      background: var(--card);
+      border: 2px dashed var(--border);
       border-radius: var(--radius);
-      padding: 3rem;
+      padding: 3rem 2rem;
       text-align: center;
-      transition: all 0.3s ease;
+      margin-bottom: 1.5rem;
       cursor: pointer;
-      margin-bottom: 2rem;
+      transition: all 0.2s;
     }
 
-    .upload-zone:hover, .upload-zone.dragover {
+    .upload-section:hover {
       border-color: var(--primary);
-      background: rgba(0, 102, 204, 0.05);
-      transform: translateY(-2px);
+      background: #f0f4f8;
     }
 
-    .upload-zone.processing {
-      border-color: var(--warning);
-      background: rgba(255, 193, 7, 0.05);
+    .upload-section.dragover {
+      border-color: var(--accent);
+      background: #fff5f5;
     }
 
-    .upload-icon {
-      font-size: 4rem;
-      margin-bottom: 1rem;
-    }
+    .upload-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .upload-section h2 { color: var(--primary); margin-bottom: 0.5rem; font-size: 1.25rem; }
+    .upload-section p { color: var(--text-muted); font-size: 0.9rem; }
 
-    .upload-zone h2 {
-      color: var(--gray-700);
-      margin-bottom: 0.5rem;
-    }
-
-    .upload-zone p {
-      color: var(--gray-500);
-      margin-bottom: 1rem;
-    }
-
-    .upload-formats {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .format-badge {
-      background: var(--gray-100);
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      color: var(--gray-700);
-      font-weight: 600;
-    }
+    .file-input { display: none; }
 
     /* Buttons */
     .btn {
-      padding: 10px 20px;
-      border-radius: 8px;
+      padding: 0.6rem 1.2rem;
+      border-radius: var(--radius);
       border: none;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s ease;
+      font-size: 0.875rem;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.9rem;
+      gap: 6px;
+      transition: all 0.2s;
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      color: white;
-    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-light); }
+    .btn-secondary { background: var(--border); color: var(--text); }
+    .btn-accent { background: var(--accent); color: white; }
+    .btn-success { background: var(--success); color: white; }
 
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 102, 204, 0.4);
-    }
-
-    .btn-secondary {
-      background: var(--gray-200);
-      color: var(--gray-700);
-    }
-
-    .btn-success {
-      background: linear-gradient(135deg, var(--secondary) 0%, #008f5b 100%);
-      color: white;
-    }
-
-    .btn-danger {
-      background: var(--danger);
-      color: white;
-    }
-
-    /* Progress Bar */
-    .progress-container {
+    /* Progress */
+    .progress-section {
       display: none;
-      margin: 1.5rem 0;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
     }
 
-    .progress-container.active {
-      display: block;
-    }
+    .progress-section.active { display: block; }
 
     .progress-bar {
-      height: 8px;
-      background: var(--gray-200);
-      border-radius: 4px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
       overflow: hidden;
+      margin: 1rem 0;
     }
 
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      background: linear-gradient(90deg, var(--primary), var(--accent));
       width: 0%;
-      transition: width 0.3s ease;
+      transition: width 0.3s;
     }
 
-    .progress-text {
-      text-align: center;
-      margin-top: 8px;
-      color: var(--gray-600);
-      font-size: 0.875rem;
+    /* Results */
+    .results { display: none; }
+    .results.active { display: block; }
+
+    /* Info Header */
+    .info-header {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
     }
 
-    /* Results Section */
-    .results {
-      display: none;
-    }
-
-    .results.active {
+    .info-item label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
       display: block;
+      margin-bottom: 4px;
+    }
+
+    .info-item span {
+      font-weight: 600;
+      font-size: 1rem;
     }
 
     /* Summary Cards */
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 1rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
     .summary-card {
-      background: white;
+      background: var(--card);
       border-radius: var(--radius);
-      padding: 1.5rem;
+      padding: 1.25rem;
       box-shadow: var(--shadow);
-      position: relative;
-      overflow: hidden;
+      border-left: 4px solid var(--primary);
     }
 
-    .summary-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-    }
-
-    .summary-card.total::before { background: var(--primary); }
-    .summary-card.utilizzato::before { background: var(--secondary); }
-    .summary-card.disponibile::before { background: var(--info); }
-    .summary-card.sofferenze::before { background: var(--danger); }
-    .summary-card.sconfinamenti::before { background: var(--warning); }
-    .summary-card.garanzie::before { background: #9c27b0; }
+    .summary-card.warning { border-left-color: var(--warning); }
+    .summary-card.danger { border-left-color: var(--accent); }
+    .summary-card.success { border-left-color: var(--success); }
+    .summary-card.info { border-left-color: var(--info); }
 
     .summary-card .label {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--gray-500);
-      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
     }
 
     .summary-card .value {
-      font-size: 1.75rem;
+      font-size: 1.5rem;
       font-weight: 700;
-      color: var(--gray-900);
+      color: var(--text);
     }
 
-    .summary-card .trend {
-      font-size: 0.8rem;
-      margin-top: 8px;
+    .summary-card .sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
     }
-
-    .trend.positive { color: var(--secondary); }
-    .trend.negative { color: var(--danger); }
-    .trend.neutral { color: var(--gray-500); }
 
     /* Tabs */
     .tabs {
       display: flex;
-      gap: 4px;
-      background: var(--gray-100);
-      padding: 4px;
-      border-radius: 10px;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
+      gap: 2px;
+      background: var(--border);
+      padding: 3px;
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      overflow-x: auto;
     }
 
     .tab {
-      padding: 10px 20px;
+      padding: 0.6rem 1rem;
       border: none;
       background: transparent;
-      border-radius: 8px;
       cursor: pointer;
+      font-size: 0.85rem;
       font-weight: 500;
-      color: var(--gray-600);
-      transition: all 0.2s ease;
+      color: var(--text-muted);
+      border-radius: 6px;
+      white-space: nowrap;
+      transition: all 0.2s;
     }
 
-    .tab:hover {
-      color: var(--gray-900);
-    }
+    .tab:hover { color: var(--text); }
+    .tab.active { background: var(--card); color: var(--primary); box-shadow: var(--shadow); }
 
-    .tab.active {
-      background: white;
-      color: var(--primary);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    /* Panel */
+    /* Panels */
     .panel {
-      background: white;
+      background: var(--card);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       display: none;
     }
 
-    .panel.active {
-      display: block;
-    }
+    .panel.active { display: block; }
 
     .panel-header {
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid var(--gray-200);
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
     }
 
     .panel-header h3 {
-      font-size: 1.1rem;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      font-size: 1rem;
+      font-weight: 600;
     }
 
-    .panel-body {
-      padding: 1.5rem;
-    }
+    .panel-body { padding: 1.25rem; }
 
-    /* Table */
-    .table-container {
-      overflow-x: auto;
-    }
+    /* Tables */
+    .table-wrapper { overflow-x: auto; }
 
     table {
       width: 100%;
       border-collapse: collapse;
+      font-size: 0.85rem;
     }
 
     th, td {
-      padding: 12px 16px;
+      padding: 0.75rem;
       text-align: left;
-      border-bottom: 1px solid var(--gray-200);
+      border-bottom: 1px solid var(--border);
     }
 
     th {
-      background: var(--gray-50);
+      background: #f8fafc;
       font-weight: 600;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--gray-600);
+      letter-spacing: 0.3px;
+      color: var(--text-muted);
     }
 
-    td {
-      font-size: 0.9rem;
-    }
+    tr:hover td { background: #f8fafc; }
 
-    tr:hover td {
-      background: var(--gray-50);
-    }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
 
     .amount {
-      font-weight: 600;
       font-family: 'SF Mono', Monaco, monospace;
-    }
-
-    .amount.positive { color: var(--secondary); }
-    .amount.negative { color: var(--danger); }
-
-    /* Status Badges */
-    .status-badge {
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.75rem;
       font-weight: 600;
     }
 
-    .status-regolare { background: #d4edda; color: #155724; }
-    .status-sconfinato { background: #fff3cd; color: #856404; }
-    .status-sofferenza { background: #f8d7da; color: #721c24; }
-    .status-incaglio { background: #ffe5d0; color: #94660c; }
+    .amount.positive { color: var(--success); }
+    .amount.negative { color: var(--accent); }
+
+    /* Bank Section */
+    .bank-section {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+
+    .bank-header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: white;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .bank-header:hover { opacity: 0.95; }
+
+    .bank-body {
+      padding: 1rem;
+      display: none;
+    }
+
+    .bank-body.open { display: block; }
+
+    .bank-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .bank-stat label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      display: block;
+    }
+
+    .bank-stat span {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    /* Badge */
+    .badge {
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .badge-success { background: #c6f6d5; color: #276749; }
+    .badge-warning { background: #feebc8; color: #c05621; }
+    .badge-danger { background: #fed7d7; color: #c53030; }
+    .badge-info { background: #bee3f8; color: #2b6cb0; }
+
+    /* Alert */
+    .alert {
+      padding: 1rem;
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .alert-success { background: #f0fff4; border-left: 4px solid var(--success); }
+    .alert-warning { background: #fffaf0; border-left: 4px solid var(--warning); }
+    .alert-danger { background: #fff5f5; border-left: 4px solid var(--accent); }
+    .alert-info { background: #ebf8ff; border-left: 4px solid var(--info); }
 
     /* Charts */
     .charts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
       gap: 1.5rem;
       margin-top: 1.5rem;
     }
 
     .chart-card {
-      background: white;
+      background: var(--card);
       border-radius: var(--radius);
-      padding: 1.5rem;
+      padding: 1.25rem;
       box-shadow: var(--shadow);
     }
 
     .chart-card h4 {
+      font-size: 0.9rem;
       margin-bottom: 1rem;
-      color: var(--gray-700);
-      font-size: 1rem;
+      color: var(--text-muted);
     }
 
     .chart-container {
@@ -429,204 +422,56 @@
       height: 250px;
     }
 
-    /* Info Section */
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1rem;
+    /* Garanzie Section */
+    .garanzie-card {
+      background: #f0fff4;
+      border: 1px solid #9ae6b4;
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-top: 1rem;
     }
 
-    .info-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--gray-100);
+    .garanzie-card h5 {
+      color: var(--success);
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
     }
 
-    .info-item:last-child {
-      border-bottom: none;
+    /* Crediti Scaduti */
+    .crediti-scaduti {
+      background: #fff5f5;
+      border: 1px solid #feb2b2;
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-top: 1rem;
     }
 
-    .info-label {
-      color: var(--gray-500);
-      font-size: 0.9rem;
+    .crediti-scaduti h5 {
+      color: var(--accent);
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
     }
 
-    .info-value {
-      font-weight: 600;
-      color: var(--gray-900);
-    }
-
-    /* Alert Box */
-    .alert {
-      padding: 1rem 1.25rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    .alert-icon {
-      font-size: 1.25rem;
-    }
-
-    .alert-warning {
-      background: #fff3cd;
-      border-left: 4px solid var(--warning);
-    }
-
-    .alert-danger {
-      background: #f8d7da;
-      border-left: 4px solid var(--danger);
-    }
-
-    .alert-success {
-      background: #d4edda;
-      border-left: 4px solid var(--secondary);
-    }
-
-    .alert-info {
-      background: #cce5ff;
-      border-left: 4px solid var(--info);
-    }
-
-    /* Score Indicator */
-    .score-container {
+    /* Footer */
+    .footer {
       text-align: center;
       padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.8rem;
     }
 
-    .score-circle {
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
-      margin: 0 auto 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .score-circle::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      padding: 8px;
-      background: conic-gradient(var(--score-color) calc(var(--score) * 1%), var(--gray-200) 0);
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-    }
-
-    .score-value {
-      font-size: 3rem;
-      font-weight: 700;
-    }
-
-    .score-label {
-      font-size: 0.9rem;
-      color: var(--gray-500);
-    }
-
-    .score-description {
-      margin-top: 1rem;
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
-
-    /* Manual Entry Form */
-    .manual-form {
-      display: none;
-      margin-top: 1.5rem;
-    }
-
-    .manual-form.active {
-      display: block;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .form-group label {
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--gray-700);
-    }
-
-    .form-group input, .form-group select {
-      padding: 10px 12px;
-      border: 1px solid var(--gray-300);
-      border-radius: 8px;
-      font-size: 0.95rem;
-      transition: border-color 0.2s;
-    }
-
-    .form-group input:focus, .form-group select:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
-    }
-
-    /* Hidden file input */
-    #fileInput {
-      display: none;
+    /* Print */
+    @media print {
+      .header, .upload-section, .tabs, .btn { display: none; }
+      .results { display: block !important; }
+      .panel { display: block !important; page-break-inside: avoid; }
     }
 
     /* Responsive */
     @media (max-width: 768px) {
       .container { padding: 1rem; }
       .header { padding: 1rem; }
-      .upload-zone { padding: 2rem 1rem; }
       .summary-grid { grid-template-columns: repeat(2, 1fr); }
-      .charts-grid { grid-template-columns: 1fr; }
-    }
-
-    /* Print Styles */
-    @media print {
-      .header, .upload-zone, .tabs, .btn { display: none; }
-      .results { display: block !important; }
-      .panel { display: block !important; box-shadow: none; margin-bottom: 1rem; }
-    }
-
-    /* Loading Spinner */
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid var(--gray-200);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 1rem;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Empty State */
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      color: var(--gray-500);
-    }
-
-    .empty-state-icon {
-      font-size: 4rem;
-      margin-bottom: 1rem;
-      opacity: 0.5;
     }
   </style>
 </head>
@@ -634,183 +479,87 @@
 
   <header class="header">
     <div class="logo">
-      <div class="logo-icon">📊</div>
+      <div class="logo-icon">S360</div>
       <div class="logo-text">
-        <h1>Scan360</h1>
-        <span>CR Technology</span>
+        <h1>Scan360 CR Technology</h1>
+        <span>Analisi Centrale Rischi Banca d'Italia</span>
       </div>
     </div>
-    <div class="header-actions">
-      <button class="btn btn-secondary" onclick="showManualEntry()">
-        ✏️ Inserimento Manuale
-      </button>
-      <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
-        📁 Carica CR
-      </button>
+    <div>
+      <button class="btn btn-secondary" onclick="resetAnalysis()">🔄 Nuova Analisi</button>
     </div>
   </header>
 
   <div class="container">
-    <!-- Upload Zone -->
-    <div class="upload-zone" id="uploadZone">
+    <!-- Upload Section -->
+    <div class="upload-section" id="uploadSection">
       <div class="upload-icon">📄</div>
       <h2>Carica il Certificato di Centrale Rischi</h2>
-      <p>Trascina il file qui oppure clicca per selezionarlo</p>
-      <div class="upload-formats">
-        <span class="format-badge">PDF</span>
-        <span class="format-badge">PNG</span>
-        <span class="format-badge">JPG</span>
-        <span class="format-badge">TIFF</span>
-      </div>
-      <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.tiff,.tif" />
+      <p>Trascina qui il file PDF oppure clicca per selezionarlo</p>
+      <p style="margin-top: 1rem;">
+        <span class="badge badge-info">PDF</span>
+        <span class="badge badge-info">Immagini</span>
+      </p>
+      <input type="file" class="file-input" id="fileInput" accept=".pdf,.png,.jpg,.jpeg" />
     </div>
 
     <!-- Progress -->
-    <div class="progress-container" id="progressContainer">
-      <div class="spinner"></div>
+    <div class="progress-section" id="progressSection">
+      <div>📊 Analisi in corso...</div>
       <div class="progress-bar">
         <div class="progress-fill" id="progressFill"></div>
       </div>
-      <div class="progress-text" id="progressText">Analisi in corso...</div>
+      <div id="progressText">Lettura documento...</div>
     </div>
 
-    <!-- Manual Entry Form -->
-    <div class="manual-form" id="manualForm">
-      <div class="panel">
-        <div class="panel-header">
-          <h3>✏️ Inserimento Manuale Dati CR</h3>
-          <button class="btn btn-secondary" onclick="hideManualEntry()">✖ Chiudi</button>
+    <!-- Results -->
+    <div class="results" id="results">
+      <!-- Info Header -->
+      <div class="info-header" id="infoHeader">
+        <div class="info-item">
+          <label>Intestatario</label>
+          <span id="intestatario">-</span>
         </div>
-        <div class="panel-body">
-          <div class="alert alert-info">
-            <span class="alert-icon">ℹ️</span>
-            <div>Inserisci i dati estratti dal certificato di Centrale Rischi. Tutti gli importi sono in Euro.</div>
-          </div>
-
-          <form id="crForm" onsubmit="processManualData(event)">
-            <h4 style="margin: 1.5rem 0 1rem; color: var(--gray-700);">📋 Dati Anagrafici</h4>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Denominazione / Nome</label>
-                <input type="text" id="denominazione" placeholder="Es: Mario Rossi S.r.l." required />
-              </div>
-              <div class="form-group">
-                <label>Codice Fiscale / P.IVA</label>
-                <input type="text" id="codiceFiscale" placeholder="Es: 01234567890" />
-              </div>
-              <div class="form-group">
-                <label>Data Riferimento</label>
-                <input type="date" id="dataRiferimento" />
-              </div>
-              <div class="form-group">
-                <label>Numero Intermediari</label>
-                <input type="number" id="numIntermediari" min="0" value="0" />
-              </div>
-            </div>
-
-            <h4 style="margin: 1.5rem 0 1rem; color: var(--gray-700);">💰 Crediti per Cassa</h4>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Rischi Autoliquidanti - Accordato</label>
-                <input type="number" id="autoliqAccordato" min="0" step="0.01" value="0" />
-              </div>
-              <div class="form-group">
-                <label>Rischi Autoliquidanti - Utilizzato</label>
-                <input type="number" id="autoliqUtilizzato" min="0" step="0.01" value="0" />
-              </div>
-              <div class="form-group">
-                <label>Rischi a Scadenza - Accordato</label>
-                <input type="number" id="scadenzaAccordato" min="0" step="0.01" value="0" />
-              </div>
-              <div class="form-group">
-                <label>Rischi a Scadenza - Utilizzato</label>
-                <input type="number" id="scadenzaUtilizzato" min="0" step="0.01" value="0" />
-              </div>
-              <div class="form-group">
-                <label>Rischi a Revoca - Accordato</label>
-                <input type="number" id="revocaAccordato" min="0" step="0.01" value="0" />
-              </div>
-              <div class="form-group">
-                <label>Rischi a Revoca - Utilizzato</label>
-                <input type="number" id="revocaUtilizzato" min="0" step="0.01" value="0" />
-              </div>
-            </div>
-
-            <h4 style="margin: 1.5rem 0 1rem; color: var(--gray-700);">✍️ Crediti di Firma</h4>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Garanzie Connesse - Accordato</label>
-                <input type="number" id="garanzieAccordato" min="0" step="0.01" value="0" />
-              </div>
-              <div class="form-group">
-                <label>Garanzie Connesse - Utilizzato</label>
-                <input type="number" id="garanzieUtilizzato" min="0" step="0.01" value="0" />
-              </div>
-            </div>
-
-            <h4 style="margin: 1.5rem 0 1rem; color: var(--gray-700);">⚠️ Anomalie</h4>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Sconfinamenti</label>
-                <input type="number" id="sconfinamenti" min="0" step="0.01" value="0" />
-              </div>
-              <div class="form-group">
-                <label>Sofferenze</label>
-                <input type="number" id="sofferenze" min="0" step="0.01" value="0" />
-              </div>
-              <div class="form-group">
-                <label>Inadempienze Probabili</label>
-                <input type="number" id="inadempienze" min="0" step="0.01" value="0" />
-              </div>
-              <div class="form-group">
-                <label>Passaggi a Perdita</label>
-                <input type="number" id="passaggiPerdita" min="0" step="0.01" value="0" />
-              </div>
-            </div>
-
-            <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
-              <button type="button" class="btn btn-secondary" onclick="hideManualEntry()">Annulla</button>
-              <button type="submit" class="btn btn-success">📊 Analizza Dati</button>
-            </div>
-          </form>
+        <div class="info-item">
+          <label>Data Riferimento</label>
+          <span id="dataRiferimento">-</span>
+        </div>
+        <div class="info-item">
+          <label>N° Intermediari</label>
+          <span id="numIntermediari">-</span>
+        </div>
+        <div class="info-item">
+          <label>Data Elaborazione</label>
+          <span id="dataElaborazione">-</span>
         </div>
       </div>
-    </div>
-
-    <!-- Results Section -->
-    <div class="results" id="results">
 
       <!-- Summary Cards -->
-      <div class="summary-grid" id="summaryCards">
-        <div class="summary-card total">
+      <div class="summary-grid" id="summaryGrid">
+        <div class="summary-card">
           <div class="label">Totale Accordato</div>
-          <div class="value" id="totalAccordato">€ 0</div>
-          <div class="trend neutral" id="trendAccordato">—</div>
+          <div class="value" id="totAccordato">€ 0</div>
         </div>
-        <div class="summary-card utilizzato">
+        <div class="summary-card info">
+          <div class="label">Accordato Operativo</div>
+          <div class="value" id="totAccordatoOp">€ 0</div>
+        </div>
+        <div class="summary-card warning">
           <div class="label">Totale Utilizzato</div>
-          <div class="value" id="totalUtilizzato">€ 0</div>
-          <div class="trend" id="trendUtilizzato">—</div>
+          <div class="value" id="totUtilizzato">€ 0</div>
+          <div class="sub" id="percUtilizzo">0% del fido</div>
         </div>
-        <div class="summary-card disponibile">
+        <div class="summary-card success">
           <div class="label">Margine Disponibile</div>
-          <div class="value" id="totalDisponibile">€ 0</div>
-          <div class="trend" id="trendDisponibile">—</div>
+          <div class="value" id="totDisponibile">€ 0</div>
         </div>
-        <div class="summary-card sofferenze">
-          <div class="label">Sofferenze</div>
-          <div class="value" id="totalSofferenze">€ 0</div>
-          <div class="trend" id="trendSofferenze">—</div>
+        <div class="summary-card danger">
+          <div class="label">Crediti Scaduti/Impagati</div>
+          <div class="value" id="totScaduti">€ 0</div>
         </div>
-        <div class="summary-card sconfinamenti">
-          <div class="label">Sconfinamenti</div>
-          <div class="value" id="totalSconfinamenti">€ 0</div>
-          <div class="trend" id="trendSconfinamenti">—</div>
-        </div>
-        <div class="summary-card garanzie">
-          <div class="label">Garanzie Prestate</div>
-          <div class="value" id="totalGaranzie">€ 0</div>
-          <div class="trend neutral">Crediti di firma</div>
+        <div class="summary-card">
+          <div class="label">Garanzie Ricevute</div>
+          <div class="value" id="totGaranzie">€ 0</div>
         </div>
       </div>
 
@@ -819,460 +568,430 @@
 
       <!-- Tabs -->
       <div class="tabs">
-        <button class="tab active" data-tab="overview">📊 Panoramica</button>
+        <button class="tab active" data-tab="overview">📊 Riepilogo</button>
+        <button class="tab" data-tab="intermediari">🏦 Per Intermediario</button>
         <button class="tab" data-tab="dettaglio">📋 Dettaglio Linee</button>
-        <button class="tab" data-tab="storico">📈 Analisi Storica</button>
-        <button class="tab" data-tab="score">🎯 Credit Score</button>
-        <button class="tab" data-tab="report">📄 Report</button>
+        <button class="tab" data-tab="garanzie">🛡️ Garanzie</button>
+        <button class="tab" data-tab="grafici">📈 Grafici</button>
       </div>
 
-      <!-- Overview Panel -->
+      <!-- Panel: Overview -->
       <div class="panel active" id="panel-overview">
         <div class="panel-header">
-          <h3>📊 Panoramica Esposizione</h3>
-          <span id="dataRiferimentoLabel">Data: --</span>
+          <h3>📊 Riepilogo Esposizione</h3>
+          <button class="btn btn-secondary" onclick="exportCSV()">⬇️ Esporta CSV</button>
         </div>
         <div class="panel-body">
-          <div class="info-grid" id="infoGrid">
-            <div>
-              <div class="info-item">
-                <span class="info-label">Denominazione</span>
-                <span class="info-value" id="infoDenominazione">—</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Codice Fiscale</span>
-                <span class="info-value" id="infoCF">—</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">N° Intermediari Segnalanti</span>
-                <span class="info-value" id="infoIntermediari">—</span>
-              </div>
-            </div>
-            <div>
-              <div class="info-item">
-                <span class="info-label">Tasso Utilizzo</span>
-                <span class="info-value" id="infoUtilizzo">—</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Incidenza Sofferenze</span>
-                <span class="info-value" id="infoSofferenze">—</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Incidenza Sconfinamenti</span>
-                <span class="info-value" id="infoSconfinamenti">—</span>
-              </div>
-            </div>
+          <div class="table-wrapper">
+            <table id="overviewTable">
+              <thead>
+                <tr>
+                  <th>Categoria</th>
+                  <th class="text-right">Accordato</th>
+                  <th class="text-right">Accordato Op.</th>
+                  <th class="text-right">Utilizzato</th>
+                  <th class="text-right">Saldo Medio</th>
+                  <th class="text-right">% Utilizzo</th>
+                </tr>
+              </thead>
+              <tbody id="overviewBody"></tbody>
+            </table>
           </div>
 
           <div class="charts-grid">
             <div class="chart-card">
-              <h4>Composizione Accordato vs Utilizzato</h4>
+              <h4>Composizione per Categoria</h4>
               <div class="chart-container">
-                <canvas id="chartAccordato"></canvas>
+                <canvas id="chartCategoria"></canvas>
               </div>
             </div>
             <div class="chart-card">
-              <h4>Distribuzione per Tipologia</h4>
+              <h4>Accordato vs Utilizzato</h4>
               <div class="chart-container">
-                <canvas id="chartTipologia"></canvas>
+                <canvas id="chartUtilizzo"></canvas>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Dettaglio Panel -->
+      <!-- Panel: Intermediari -->
+      <div class="panel" id="panel-intermediari">
+        <div class="panel-header">
+          <h3>🏦 Dettaglio per Intermediario</h3>
+        </div>
+        <div class="panel-body" id="intermediariBody">
+          <!-- Bank sections will be inserted here -->
+        </div>
+      </div>
+
+      <!-- Panel: Dettaglio -->
       <div class="panel" id="panel-dettaglio">
         <div class="panel-header">
-          <h3>📋 Dettaglio Linee di Credito</h3>
-          <button class="btn btn-secondary" onclick="exportTable()">⬇️ Esporta CSV</button>
+          <h3>📋 Tutte le Linee di Credito</h3>
         </div>
         <div class="panel-body">
-          <div class="table-container">
-            <table id="lineeTable">
+          <div class="table-wrapper">
+            <table>
               <thead>
                 <tr>
-                  <th>Tipologia</th>
-                  <th>Accordato</th>
-                  <th>Utilizzato</th>
-                  <th>Disponibile</th>
-                  <th>% Utilizzo</th>
-                  <th>Stato</th>
+                  <th>Intermediario</th>
+                  <th>Categoria</th>
+                  <th>Localizzazione</th>
+                  <th>Tipo Attività</th>
+                  <th class="text-right">Accordato</th>
+                  <th class="text-right">Utilizzato</th>
+                  <th class="text-right">Saldo Medio</th>
                 </tr>
               </thead>
-              <tbody id="lineeTableBody">
-              </tbody>
+              <tbody id="dettaglioBody"></tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- Storico Panel -->
-      <div class="panel" id="panel-storico">
+      <!-- Panel: Garanzie -->
+      <div class="panel" id="panel-garanzie">
         <div class="panel-header">
-          <h3>📈 Analisi Storica</h3>
+          <h3>🛡️ Informazioni sui Garanti</h3>
         </div>
-        <div class="panel-body">
-          <div class="alert alert-info">
-            <span class="alert-icon">ℹ️</span>
-            <div>Carica più certificati CR di periodi diversi per visualizzare l'andamento storico dell'esposizione.</div>
-          </div>
-          <div class="chart-card">
-            <h4>Trend Esposizione nel Tempo</h4>
-            <div class="chart-container" style="height: 300px;">
-              <canvas id="chartStorico"></canvas>
-            </div>
-          </div>
+        <div class="panel-body" id="garanzieBody">
+          <!-- Garanzie will be inserted here -->
         </div>
       </div>
 
-      <!-- Score Panel -->
-      <div class="panel" id="panel-score">
+      <!-- Panel: Grafici -->
+      <div class="panel" id="panel-grafici">
         <div class="panel-header">
-          <h3>🎯 Analisi Credit Score</h3>
+          <h3>📈 Analisi Grafica</h3>
         </div>
         <div class="panel-body">
-          <div class="score-container">
-            <div class="score-circle" id="scoreCircle" style="--score: 0; --score-color: #6c757d;">
-              <div class="score-value" id="scoreValue">--</div>
-              <div class="score-label">su 100</div>
-            </div>
-            <div class="score-description" id="scoreDescription">Carica un certificato CR per calcolare lo score</div>
-          </div>
-
           <div class="charts-grid">
             <div class="chart-card">
-              <h4>Fattori di Rischio</h4>
+              <h4>Distribuzione per Intermediario</h4>
+              <div class="chart-container">
+                <canvas id="chartIntermediari"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <h4>Profilo di Rischio</h4>
               <div class="chart-container">
                 <canvas id="chartRischio"></canvas>
               </div>
             </div>
-            <div class="chart-card">
-              <h4>Breakdown Score</h4>
-              <div id="scoreBreakdown" style="padding: 1rem;">
-                <div class="info-item">
-                  <span class="info-label">Tasso Utilizzo Fidi</span>
-                  <span class="info-value" id="scoreUtilizzo">—</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Assenza Sofferenze</span>
-                  <span class="info-value" id="scoreSofferenze">—</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Assenza Sconfinamenti</span>
-                  <span class="info-value" id="scoreSconfinamenti">—</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Diversificazione</span>
-                  <span class="info-value" id="scoreDiversificazione">—</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Report Panel -->
-      <div class="panel" id="panel-report">
-        <div class="panel-header">
-          <h3>📄 Report Completo</h3>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn btn-primary" onclick="printReport()">🖨️ Stampa</button>
-            <button class="btn btn-success" onclick="downloadReport()">⬇️ Scarica PDF</button>
-          </div>
-        </div>
-        <div class="panel-body">
-          <div id="reportContent">
-            <!-- Report content will be generated here -->
-          </div>
-        </div>
-      </div>
-
+    <div class="footer">
+      Scan360 CR Technology - Analisi automatizzata Centrale Rischi Banca d'Italia<br>
+      I dati mostrati sono estratti dal documento caricato. Verificare sempre con la documentazione ufficiale.
     </div>
   </div>
 
   <script>
     // ==========================================
-    // SCAN360 - CR ANALYSIS ENGINE
+    // SCAN360 CR ANALYZER - Banca d'Italia Format
     // ==========================================
-
-    // State
-    let crData = null;
-    let charts = {};
-    let historicalData = [];
-
-    // DOM Elements
-    const uploadZone = document.getElementById('uploadZone');
-    const fileInput = document.getElementById('fileInput');
-    const progressContainer = document.getElementById('progressContainer');
-    const progressFill = document.getElementById('progressFill');
-    const progressText = document.getElementById('progressText');
-    const results = document.getElementById('results');
-    const manualForm = document.getElementById('manualForm');
 
     // Initialize PDF.js
     if (typeof pdfjsLib !== 'undefined') {
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     }
 
+    // State
+    let crData = {
+      intestatario: '',
+      dataRiferimento: '',
+      dataElaborazione: '',
+      intermediari: [],
+      totals: {
+        accordato: 0,
+        accordatoOperativo: 0,
+        utilizzato: 0,
+        saldoMedio: 0,
+        importoGarantito: 0
+      },
+      categorie: {
+        autoliquidanti: { accordato: 0, accordatoOp: 0, utilizzato: 0, saldoMedio: 0 },
+        scadenza: { accordato: 0, accordatoOp: 0, utilizzato: 0, saldoMedio: 0 },
+        revoca: { accordato: 0, accordatoOp: 0, utilizzato: 0, saldoMedio: 0 }
+      },
+      creditiScaduti: { pagati: 0, impagati: 0 },
+      garanzie: []
+    };
+
+    let charts = {};
+
+    // DOM Elements
+    const uploadSection = document.getElementById('uploadSection');
+    const progressSection = document.getElementById('progressSection');
+    const results = document.getElementById('results');
+    const fileInput = document.getElementById('fileInput');
+
     // ==========================================
-    // FILE UPLOAD & DRAG-DROP
+    // FILE HANDLING
     // ==========================================
 
-    uploadZone.addEventListener('click', () => fileInput.click());
-
-    uploadZone.addEventListener('dragover', (e) => {
+    uploadSection.addEventListener('click', () => fileInput.click());
+    uploadSection.addEventListener('dragover', (e) => {
       e.preventDefault();
-      uploadZone.classList.add('dragover');
+      uploadSection.classList.add('dragover');
     });
-
-    uploadZone.addEventListener('dragleave', () => {
-      uploadZone.classList.remove('dragover');
-    });
-
-    uploadZone.addEventListener('drop', (e) => {
+    uploadSection.addEventListener('dragleave', () => uploadSection.classList.remove('dragover'));
+    uploadSection.addEventListener('drop', (e) => {
       e.preventDefault();
-      uploadZone.classList.remove('dragover');
-      const file = e.dataTransfer.files[0];
-      if (file) processFile(file);
+      uploadSection.classList.remove('dragover');
+      if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
     });
-
     fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) processFile(file);
+      if (e.target.files[0]) processFile(e.target.files[0]);
     });
-
-    // ==========================================
-    // FILE PROCESSING
-    // ==========================================
 
     async function processFile(file) {
-      showProgress();
-      updateProgress(10, 'Lettura file...');
+      uploadSection.style.display = 'none';
+      progressSection.classList.add('active');
+      updateProgress(10, 'Lettura documento...');
 
       try {
         let text = '';
-
         if (file.type === 'application/pdf') {
-          text = await extractTextFromPDF(file);
-        } else if (file.type.startsWith('image/')) {
-          text = await extractTextFromImage(file);
+          text = await extractPDFText(file);
         } else {
-          throw new Error('Formato file non supportato');
+          throw new Error('Formato non supportato. Usa PDF.');
         }
 
-        updateProgress(70, 'Analisi dati CR...');
-        crData = parsecrData(text);
+        updateProgress(60, 'Analisi dati CR...');
+        parseCRData(text);
 
         updateProgress(90, 'Generazione report...');
-        await new Promise(r => setTimeout(r, 500));
+        await sleep(300);
 
         updateProgress(100, 'Completato!');
-        await new Promise(r => setTimeout(r, 300));
+        await sleep(200);
 
-        hideProgress();
+        progressSection.classList.remove('active');
         displayResults();
 
       } catch (error) {
-        console.error('Errore elaborazione:', error);
-        hideProgress();
-        alert('Errore durante l\'elaborazione del file. Prova con l\'inserimento manuale dei dati.');
+        console.error('Errore:', error);
+        alert('Errore nell\'elaborazione. Verifica che il file sia un certificato CR valido.');
+        resetAnalysis();
       }
     }
 
-    async function extractTextFromPDF(file) {
-      updateProgress(20, 'Caricamento PDF...');
-
+    async function extractPDFText(file) {
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-
       let fullText = '';
-      const totalPages = pdf.numPages;
 
-      for (let i = 1; i <= totalPages; i++) {
-        updateProgress(20 + (40 * i / totalPages), `Lettura pagina ${i}/${totalPages}...`);
+      for (let i = 1; i <= pdf.numPages; i++) {
+        updateProgress(10 + (40 * i / pdf.numPages), `Lettura pagina ${i}/${pdf.numPages}...`);
         const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items.map(item => item.str).join(' ');
+        const content = await page.getTextContent();
+        const pageText = content.items.map(item => item.str).join(' ');
         fullText += pageText + '\n';
       }
 
       return fullText;
     }
 
-    async function extractTextFromImage(file) {
-      updateProgress(20, 'Inizializzazione OCR...');
-
-      const worker = await Tesseract.createWorker('ita');
-
-      updateProgress(40, 'Riconoscimento testo...');
-      const { data } = await worker.recognize(file);
-
-      await worker.terminate();
-      return data.text;
-    }
-
     // ==========================================
     // CR DATA PARSING
     // ==========================================
 
-    function parsecrData(text) {
-      // Normalize text
-      const normalizedText = text.toLowerCase().replace(/\s+/g, ' ');
-
-      // Extract data using patterns
-      const data = {
-        denominazione: extractPattern(text, /(?:denominazione|ragione sociale|intestatario)[:\s]*([^\n]+)/i) || 'Non rilevato',
-        codiceFiscale: extractPattern(text, /(?:codice fiscale|c\.f\.|cf|p\.iva)[:\s]*(\d{11}|\w{16})/i) || 'Non rilevato',
-        dataRiferimento: extractDate(text) || new Date().toISOString().slice(0, 10),
-        numIntermediari: extractNumber(text, /(?:numero intermediari|n\.\s*intermediari|intermediari segnalanti)[:\s]*(\d+)/i) || 1,
-
-        // Crediti per cassa
-        autoliquidanti: {
-          accordato: extractAmount(text, /autoliquidant[ie].*?accordato[:\s]*([\d.,]+)/i) || 0,
-          utilizzato: extractAmount(text, /autoliquidant[ie].*?utilizzato[:\s]*([\d.,]+)/i) || 0
+    function parseCRData(text) {
+      // Reset data
+      crData = {
+        intestatario: '',
+        dataRiferimento: '',
+        dataElaborazione: '',
+        intermediari: [],
+        totals: { accordato: 0, accordatoOperativo: 0, utilizzato: 0, saldoMedio: 0, importoGarantito: 0 },
+        categorie: {
+          autoliquidanti: { accordato: 0, accordatoOp: 0, utilizzato: 0, saldoMedio: 0 },
+          scadenza: { accordato: 0, accordatoOp: 0, utilizzato: 0, saldoMedio: 0 },
+          revoca: { accordato: 0, accordatoOp: 0, utilizzato: 0, saldoMedio: 0 }
         },
-        scadenza: {
-          accordato: extractAmount(text, /(?:a scadenza|scadenza).*?accordato[:\s]*([\d.,]+)/i) || 0,
-          utilizzato: extractAmount(text, /(?:a scadenza|scadenza).*?utilizzato[:\s]*([\d.,]+)/i) || 0
-        },
-        revoca: {
-          accordato: extractAmount(text, /(?:a revoca|revoca).*?accordato[:\s]*([\d.,]+)/i) || 0,
-          utilizzato: extractAmount(text, /(?:a revoca|revoca).*?utilizzato[:\s]*([\d.,]+)/i) || 0
-        },
-
-        // Crediti di firma
-        garanzie: {
-          accordato: extractAmount(text, /garanzi[ae].*?accordato[:\s]*([\d.,]+)/i) || 0,
-          utilizzato: extractAmount(text, /garanzi[ae].*?utilizzato[:\s]*([\d.,]+)/i) || 0
-        },
-
-        // Anomalie
-        sconfinamenti: extractAmount(text, /sconfinament[io][:\s]*([\d.,]+)/i) || 0,
-        sofferenze: extractAmount(text, /sofferenz[ae][:\s]*([\d.,]+)/i) || 0,
-        inadempienze: extractAmount(text, /inadempienz[ae][:\s]*([\d.,]+)/i) || 0,
-        passaggiPerdita: extractAmount(text, /passaggi.*?perdita[:\s]*([\d.,]+)/i) || 0,
-
-        rawText: text
+        creditiScaduti: { pagati: 0, impagati: 0 },
+        garanzie: []
       };
 
+      // Extract header info
+      const intestatarioMatch = text.match(/Intestatario[:\s]*(\d+)/i);
+      if (intestatarioMatch) crData.intestatario = intestatarioMatch[1];
+
+      const dataRefMatch = text.match(/DATA DI RIFERIMENTO[:\s]*([a-zA-Z]+\s+\d{4})/i);
+      if (dataRefMatch) crData.dataRiferimento = dataRefMatch[1];
+
+      const dataElabMatch = text.match(/Data di elaborazione[^\d]*(\d{2}\/\d{2}\/\d{4})/i);
+      if (dataElabMatch) crData.dataElaborazione = dataElabMatch[1];
+
+      // Extract intermediari and their data
+      const intermediariPattern = /Intermediario[:\s]*([A-Z][A-Z\s\.,'&]+(?:S\.P\.A\.|SPA|S\.R\.L\.|BANCA|BANK))/gi;
+      let match;
+      const intermediariNames = new Set();
+
+      while ((match = intermediariPattern.exec(text)) !== null) {
+        const name = match[1].trim().replace(/\s+/g, ' ');
+        if (name.length > 5) intermediariNames.add(name);
+      }
+
+      // Parse numeric data - find all number sequences that look like financial data
+      const numPattern = /(\d{1,3}(?:\.\d{3})*(?:,\d+)?)/g;
+      const allNumbers = [];
+      let numMatch;
+      while ((numMatch = numPattern.exec(text)) !== null) {
+        const val = parseItalianNumber(numMatch[1]);
+        if (val > 0) allNumbers.push(val);
+      }
+
+      // Create intermediari from found names
+      intermediariNames.forEach(name => {
+        crData.intermediari.push({
+          nome: name,
+          linee: [],
+          totals: { accordato: 0, accordatoOp: 0, utilizzato: 0, saldoMedio: 0 }
+        });
+      });
+
+      // Parse specific CR sections
+      parseCreditiPerCassa(text);
+      parseSezioneInformativa(text);
+      parseGaranzie(text);
+
       // Calculate totals
-      data.totaleAccordato = data.autoliquidanti.accordato + data.scadenza.accordato +
-                             data.revoca.accordato + data.garanzie.accordato;
-      data.totaleUtilizzato = data.autoliquidanti.utilizzato + data.scadenza.utilizzato +
-                              data.revoca.utilizzato + data.garanzie.utilizzato;
-      data.totaleDisponibile = data.totaleAccordato - data.totaleUtilizzato;
+      calculateTotals();
 
-      return data;
+      // If no intermediari found, create a default
+      if (crData.intermediari.length === 0) {
+        crData.intermediari.push({
+          nome: 'Intermediario',
+          linee: [],
+          totals: { accordato: 0, accordatoOp: 0, utilizzato: 0, saldoMedio: 0 }
+        });
+      }
     }
 
-    function extractPattern(text, pattern) {
-      const match = text.match(pattern);
-      return match ? match[1].trim() : null;
-    }
-
-    function extractNumber(text, pattern) {
-      const match = text.match(pattern);
-      return match ? parseInt(match[1]) : null;
-    }
-
-    function extractAmount(text, pattern) {
-      const match = text.match(pattern);
-      if (!match) return 0;
-      // Handle Italian number format (1.234,56 or 1234,56)
-      let numStr = match[1].replace(/\./g, '').replace(',', '.');
-      return parseFloat(numStr) || 0;
-    }
-
-    function extractDate(text) {
-      const patterns = [
-        /data[:\s]*(\d{2}[\/\-]\d{2}[\/\-]\d{4})/i,
-        /riferimento[:\s]*(\d{2}[\/\-]\d{2}[\/\-]\d{4})/i,
-        /(\d{2}[\/\-]\d{2}[\/\-]\d{4})/
+    function parseCreditiPerCassa(text) {
+      // Pattern to find credit lines with their values
+      const categorieKeywords = [
+        { key: 'RISCHI AUTOLIQUIDANTI', cat: 'autoliquidanti' },
+        { key: 'RISCHI A SCADENZA', cat: 'scadenza' },
+        { key: 'RISCHIA SCADENZA', cat: 'scadenza' },
+        { key: 'RISCHI A REVOCA', cat: 'revoca' }
       ];
 
-      for (const pattern of patterns) {
-        const match = text.match(pattern);
-        if (match) {
-          const parts = match[1].split(/[\/\-]/);
-          return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      // Find all occurrences of credit categories with their values
+      categorieKeywords.forEach(({ key, cat }) => {
+        // Look for patterns like: CATEGORY ... numbers
+        const regex = new RegExp(key + '[^\\d]*((?:\\d{1,3}(?:\\.\\d{3})*(?:,\\d+)?\\s*)+)', 'gi');
+        let match;
+
+        while ((match = regex.exec(text)) !== null) {
+          const numbersStr = match[1];
+          const numbers = extractNumbers(numbersStr);
+
+          if (numbers.length >= 2) {
+            // Typical pattern: Accordato, Accordato Op, Utilizzato, Saldo Medio, Importo Garantito
+            const accordato = numbers[0] || 0;
+            const accordatoOp = numbers.length > 2 ? numbers[1] : numbers[0];
+            const utilizzato = numbers.length > 2 ? numbers[2] : numbers[1];
+            const saldoMedio = numbers.length > 3 ? numbers[3] : 0;
+
+            crData.categorie[cat].accordato += accordato;
+            crData.categorie[cat].accordatoOp += accordatoOp;
+            crData.categorie[cat].utilizzato += utilizzato;
+            crData.categorie[cat].saldoMedio += saldoMedio;
+
+            // Add to first intermediario if exists
+            if (crData.intermediari.length > 0) {
+              crData.intermediari[0].linee.push({
+                categoria: key,
+                accordato,
+                accordatoOp,
+                utilizzato,
+                saldoMedio
+              });
+            }
+          }
+        }
+      });
+    }
+
+    function parseSezioneInformativa(text) {
+      // Look for CREDITI PAGATI and CREDITI IMPAGATI
+      const pagatiMatch = text.match(/CREDITI\s*PAGATI[^\d]*([\d.,]+)/i);
+      const impagatiMatch = text.match(/CREDITI\s*IMPAGATI[^\d]*([\d.,]+)/i);
+
+      if (pagatiMatch) {
+        crData.creditiScaduti.pagati += parseItalianNumber(pagatiMatch[1]);
+      }
+      if (impagatiMatch) {
+        crData.creditiScaduti.impagati += parseItalianNumber(impagatiMatch[1]);
+      }
+    }
+
+    function parseGaranzie(text) {
+      // Look for INFORMAZIONI SUI GARANTI section
+      const garanziePattern = /(?:Cointestazione|Garante)[^\d]*([\d.,]+)[^\d]*([\d.,]+)/gi;
+      let match;
+
+      while ((match = garanziePattern.exec(text)) !== null) {
+        const valoreGaranzia = parseItalianNumber(match[1]);
+        const importoGarantito = parseItalianNumber(match[2]);
+
+        if (valoreGaranzia > 0) {
+          crData.garanzie.push({
+            descrizione: 'Garanzia',
+            valoreGaranzia,
+            importoGarantito
+          });
+          crData.totals.importoGarantito += importoGarantito;
         }
       }
-      return null;
+    }
+
+    function calculateTotals() {
+      // Sum up categories
+      Object.values(crData.categorie).forEach(cat => {
+        crData.totals.accordato += cat.accordato;
+        crData.totals.accordatoOperativo += cat.accordatoOp;
+        crData.totals.utilizzato += cat.utilizzato;
+        crData.totals.saldoMedio += cat.saldoMedio;
+      });
+
+      // Update intermediari totals
+      crData.intermediari.forEach(int => {
+        int.linee.forEach(linea => {
+          int.totals.accordato += linea.accordato;
+          int.totals.accordatoOp += linea.accordatoOp;
+          int.totals.utilizzato += linea.utilizzato;
+          int.totals.saldoMedio += linea.saldoMedio;
+        });
+      });
     }
 
     // ==========================================
-    // MANUAL DATA ENTRY
+    // UTILITIES
     // ==========================================
 
-    function showManualEntry() {
-      manualForm.classList.add('active');
-      uploadZone.style.display = 'none';
+    function parseItalianNumber(str) {
+      if (!str) return 0;
+      // Italian format: 1.234,56 -> 1234.56
+      const cleaned = str.replace(/\./g, '').replace(',', '.');
+      return parseFloat(cleaned) || 0;
     }
 
-    function hideManualEntry() {
-      manualForm.classList.remove('active');
-      uploadZone.style.display = 'block';
-    }
-
-    function processManualData(event) {
-      event.preventDefault();
-
-      crData = {
-        denominazione: document.getElementById('denominazione').value || 'Non specificato',
-        codiceFiscale: document.getElementById('codiceFiscale').value || 'Non specificato',
-        dataRiferimento: document.getElementById('dataRiferimento').value || new Date().toISOString().slice(0, 10),
-        numIntermediari: parseInt(document.getElementById('numIntermediari').value) || 1,
-
-        autoliquidanti: {
-          accordato: parseFloat(document.getElementById('autoliqAccordato').value) || 0,
-          utilizzato: parseFloat(document.getElementById('autoliqUtilizzato').value) || 0
-        },
-        scadenza: {
-          accordato: parseFloat(document.getElementById('scadenzaAccordato').value) || 0,
-          utilizzato: parseFloat(document.getElementById('scadenzaUtilizzato').value) || 0
-        },
-        revoca: {
-          accordato: parseFloat(document.getElementById('revocaAccordato').value) || 0,
-          utilizzato: parseFloat(document.getElementById('revocaUtilizzato').value) || 0
-        },
-        garanzie: {
-          accordato: parseFloat(document.getElementById('garanzieAccordato').value) || 0,
-          utilizzato: parseFloat(document.getElementById('garanzieUtilizzato').value) || 0
-        },
-
-        sconfinamenti: parseFloat(document.getElementById('sconfinamenti').value) || 0,
-        sofferenze: parseFloat(document.getElementById('sofferenze').value) || 0,
-        inadempienze: parseFloat(document.getElementById('inadempienze').value) || 0,
-        passaggiPerdita: parseFloat(document.getElementById('passaggiPerdita').value) || 0
-      };
-
-      // Calculate totals
-      crData.totaleAccordato = crData.autoliquidanti.accordato + crData.scadenza.accordato +
-                               crData.revoca.accordato + crData.garanzie.accordato;
-      crData.totaleUtilizzato = crData.autoliquidanti.utilizzato + crData.scadenza.utilizzato +
-                                crData.revoca.utilizzato + crData.garanzie.utilizzato;
-      crData.totaleDisponibile = crData.totaleAccordato - crData.totaleUtilizzato;
-
-      hideManualEntry();
-      displayResults();
-    }
-
-    // ==========================================
-    // DISPLAY RESULTS
-    // ==========================================
-
-    function displayResults() {
-      results.classList.add('active');
-      uploadZone.style.display = 'none';
-
-      updateSummaryCards();
-      updateAlerts();
-      updateInfoGrid();
-      updateLineeTable();
-      updateCharts();
-      calculateScore();
-      generateReport();
+    function extractNumbers(str) {
+      const pattern = /(\d{1,3}(?:\.\d{3})*(?:,\d+)?)/g;
+      const numbers = [];
+      let match;
+      while ((match = pattern.exec(str)) !== null) {
+        numbers.push(parseItalianNumber(match[1]));
+      }
+      return numbers;
     }
 
     function formatCurrency(amount) {
@@ -1290,687 +1009,438 @@
       }).format(value);
     }
 
-    function updateSummaryCards() {
-      document.getElementById('totalAccordato').textContent = formatCurrency(crData.totaleAccordato);
-      document.getElementById('totalUtilizzato').textContent = formatCurrency(crData.totaleUtilizzato);
-      document.getElementById('totalDisponibile').textContent = formatCurrency(crData.totaleDisponibile);
-      document.getElementById('totalSofferenze').textContent = formatCurrency(crData.sofferenze);
-      document.getElementById('totalSconfinamenti').textContent = formatCurrency(crData.sconfinamenti);
-      document.getElementById('totalGaranzie').textContent = formatCurrency(crData.garanzie.utilizzato);
-
-      // Update trends
-      const utilizzoRate = crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0;
-      const trendUtilizzato = document.getElementById('trendUtilizzato');
-      trendUtilizzato.textContent = `${formatPercent(utilizzoRate)} del fido`;
-      trendUtilizzato.className = 'trend ' + (utilizzoRate > 0.8 ? 'negative' : utilizzoRate > 0.5 ? 'neutral' : 'positive');
-
-      const trendDisponibile = document.getElementById('trendDisponibile');
-      const disponibileRate = crData.totaleAccordato > 0 ? crData.totaleDisponibile / crData.totaleAccordato : 0;
-      trendDisponibile.textContent = `${formatPercent(disponibileRate)} disponibile`;
-      trendDisponibile.className = 'trend ' + (disponibileRate < 0.2 ? 'negative' : 'positive');
-
-      const trendSofferenze = document.getElementById('trendSofferenze');
-      if (crData.sofferenze > 0) {
-        const sofferenzeRate = crData.totaleUtilizzato > 0 ? crData.sofferenze / crData.totaleUtilizzato : 0;
-        trendSofferenze.textContent = `${formatPercent(sofferenzeRate)} del totale`;
-        trendSofferenze.className = 'trend negative';
-      } else {
-        trendSofferenze.textContent = 'Nessuna sofferenza';
-        trendSofferenze.className = 'trend positive';
-      }
-
-      const trendSconfinamenti = document.getElementById('trendSconfinamenti');
-      if (crData.sconfinamenti > 0) {
-        trendSconfinamenti.textContent = 'Presenza sconfinamenti';
-        trendSconfinamenti.className = 'trend negative';
-      } else {
-        trendSconfinamenti.textContent = 'Nessuno sconfinamento';
-        trendSconfinamenti.className = 'trend positive';
-      }
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    function updateAlerts() {
+    function updateProgress(percent, text) {
+      document.getElementById('progressFill').style.width = percent + '%';
+      document.getElementById('progressText').textContent = text;
+    }
+
+    // ==========================================
+    // DISPLAY RESULTS
+    // ==========================================
+
+    function displayResults() {
+      results.classList.add('active');
+
+      // Header info
+      document.getElementById('intestatario').textContent = crData.intestatario || '-';
+      document.getElementById('dataRiferimento').textContent = crData.dataRiferimento || '-';
+      document.getElementById('dataElaborazione').textContent = crData.dataElaborazione || '-';
+      document.getElementById('numIntermediari').textContent = crData.intermediari.length;
+
+      // Summary cards
+      document.getElementById('totAccordato').textContent = formatCurrency(crData.totals.accordato);
+      document.getElementById('totAccordatoOp').textContent = formatCurrency(crData.totals.accordatoOperativo);
+      document.getElementById('totUtilizzato').textContent = formatCurrency(crData.totals.utilizzato);
+      document.getElementById('totDisponibile').textContent = formatCurrency(crData.totals.accordatoOperativo - crData.totals.utilizzato);
+      document.getElementById('totScaduti').textContent = formatCurrency(crData.creditiScaduti.pagati + crData.creditiScaduti.impagati);
+      document.getElementById('totGaranzie').textContent = formatCurrency(crData.totals.importoGarantito);
+
+      const utilizzoRate = crData.totals.accordatoOperativo > 0
+        ? crData.totals.utilizzato / crData.totals.accordatoOperativo
+        : 0;
+      document.getElementById('percUtilizzo').textContent = formatPercent(utilizzoRate) + ' del fido';
+
+      // Alerts
+      displayAlerts();
+
+      // Tables
+      displayOverviewTable();
+      displayIntermediari();
+      displayDettaglio();
+      displayGaranzie();
+
+      // Charts
+      displayCharts();
+    }
+
+    function displayAlerts() {
       const container = document.getElementById('alertsContainer');
       container.innerHTML = '';
 
-      // Check for issues
-      if (crData.sofferenze > 0) {
+      const utilizzoRate = crData.totals.accordatoOperativo > 0
+        ? crData.totals.utilizzato / crData.totals.accordatoOperativo
+        : 0;
+
+      if (crData.creditiScaduti.impagati > 0) {
         container.innerHTML += `
           <div class="alert alert-danger">
-            <span class="alert-icon">🚨</span>
+            <span>⚠️</span>
             <div>
-              <strong>Sofferenze Rilevate:</strong> ${formatCurrency(crData.sofferenze)}<br>
-              La presenza di sofferenze compromette significativamente il merito creditizio.
+              <strong>Crediti Impagati Rilevati:</strong> ${formatCurrency(crData.creditiScaduti.impagati)}<br>
+              La presenza di crediti impagati può compromettere il merito creditizio.
             </div>
           </div>
         `;
       }
 
-      if (crData.sconfinamenti > 0) {
-        container.innerHTML += `
-          <div class="alert alert-warning">
-            <span class="alert-icon">⚠️</span>
-            <div>
-              <strong>Sconfinamenti Rilevati:</strong> ${formatCurrency(crData.sconfinamenti)}<br>
-              Gli sconfinamenti indicano un utilizzo oltre i limiti accordati.
-            </div>
-          </div>
-        `;
-      }
-
-      const utilizzoRate = crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0;
       if (utilizzoRate > 0.85) {
         container.innerHTML += `
           <div class="alert alert-warning">
-            <span class="alert-icon">📊</span>
+            <span>📊</span>
             <div>
               <strong>Alto Utilizzo Fidi:</strong> ${formatPercent(utilizzoRate)}<br>
-              Un utilizzo superiore all'85% può indicare tensione finanziaria.
+              Utilizzo superiore all'85% indica potenziale tensione finanziaria.
             </div>
           </div>
         `;
       }
 
-      if (crData.sofferenze === 0 && crData.sconfinamenti === 0 && utilizzoRate < 0.7) {
+      if (utilizzoRate <= 0.7 && crData.creditiScaduti.impagati === 0) {
         container.innerHTML += `
           <div class="alert alert-success">
-            <span class="alert-icon">✅</span>
+            <span>✅</span>
             <div>
-              <strong>Posizione Regolare:</strong> Nessuna anomalia rilevata.<br>
-              Il profilo creditizio risulta in ordine con margini di utilizzo adeguati.
+              <strong>Posizione Regolare</strong><br>
+              Utilizzo fidi nella norma (${formatPercent(utilizzoRate)}), nessun credito impagato.
             </div>
           </div>
         `;
       }
     }
 
-    function updateInfoGrid() {
-      document.getElementById('dataRiferimentoLabel').textContent = `Data: ${formatDateIT(crData.dataRiferimento)}`;
-      document.getElementById('infoDenominazione').textContent = crData.denominazione;
-      document.getElementById('infoCF').textContent = crData.codiceFiscale;
-      document.getElementById('infoIntermediari').textContent = crData.numIntermediari;
-
-      const utilizzoRate = crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0;
-      document.getElementById('infoUtilizzo').textContent = formatPercent(utilizzoRate);
-
-      const sofferenzeRate = crData.totaleUtilizzato > 0 ? crData.sofferenze / crData.totaleUtilizzato : 0;
-      document.getElementById('infoSofferenze').textContent = formatPercent(sofferenzeRate);
-
-      const sconfinamentiRate = crData.totaleUtilizzato > 0 ? crData.sconfinamenti / crData.totaleUtilizzato : 0;
-      document.getElementById('infoSconfinamenti').textContent = formatPercent(sconfinamentiRate);
-    }
-
-    function formatDateIT(dateStr) {
-      if (!dateStr) return '—';
-      const date = new Date(dateStr);
-      return new Intl.DateTimeFormat('it-IT', { dateStyle: 'long' }).format(date);
-    }
-
-    function updateLineeTable() {
-      const tbody = document.getElementById('lineeTableBody');
-
-      const linee = [
-        { nome: 'Rischi Autoliquidanti', ...crData.autoliquidanti },
-        { nome: 'Rischi a Scadenza', ...crData.scadenza },
-        { nome: 'Rischi a Revoca', ...crData.revoca },
-        { nome: 'Garanzie / Crediti di Firma', ...crData.garanzie }
+    function displayOverviewTable() {
+      const tbody = document.getElementById('overviewBody');
+      const categories = [
+        { name: 'Rischi Autoliquidanti', data: crData.categorie.autoliquidanti },
+        { name: 'Rischi a Scadenza', data: crData.categorie.scadenza },
+        { name: 'Rischi a Revoca', data: crData.categorie.revoca }
       ];
 
-      tbody.innerHTML = linee.map(linea => {
-        const disponibile = linea.accordato - linea.utilizzato;
-        const utilizzo = linea.accordato > 0 ? linea.utilizzato / linea.accordato : 0;
-        let statusClass = 'status-regolare';
-        let statusText = 'Regolare';
-
-        if (utilizzo > 1) {
-          statusClass = 'status-sconfinato';
-          statusText = 'Sconfinato';
-        } else if (utilizzo > 0.9) {
-          statusClass = 'status-incaglio';
-          statusText = 'Critico';
-        }
-
+      tbody.innerHTML = categories.map(cat => {
+        const utilizzo = cat.data.accordatoOp > 0 ? cat.data.utilizzato / cat.data.accordatoOp : 0;
         return `
           <tr>
-            <td><strong>${linea.nome}</strong></td>
-            <td class="amount">${formatCurrency(linea.accordato)}</td>
-            <td class="amount">${formatCurrency(linea.utilizzato)}</td>
-            <td class="amount ${disponibile < 0 ? 'negative' : 'positive'}">${formatCurrency(disponibile)}</td>
-            <td>${formatPercent(utilizzo)}</td>
-            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td><strong>${cat.name}</strong></td>
+            <td class="text-right amount">${formatCurrency(cat.data.accordato)}</td>
+            <td class="text-right amount">${formatCurrency(cat.data.accordatoOp)}</td>
+            <td class="text-right amount">${formatCurrency(cat.data.utilizzato)}</td>
+            <td class="text-right amount">${formatCurrency(cat.data.saldoMedio)}</td>
+            <td class="text-right">
+              <span class="badge ${utilizzo > 0.9 ? 'badge-danger' : utilizzo > 0.7 ? 'badge-warning' : 'badge-success'}">
+                ${formatPercent(utilizzo)}
+              </span>
+            </td>
           </tr>
         `;
       }).join('');
 
-      // Add totals row
+      // Totals row
+      const totUtilizzo = crData.totals.accordatoOperativo > 0
+        ? crData.totals.utilizzato / crData.totals.accordatoOperativo
+        : 0;
+
       tbody.innerHTML += `
-        <tr style="background: var(--gray-50); font-weight: 700;">
+        <tr style="background: #f8fafc; font-weight: 600;">
           <td>TOTALE</td>
-          <td class="amount">${formatCurrency(crData.totaleAccordato)}</td>
-          <td class="amount">${formatCurrency(crData.totaleUtilizzato)}</td>
-          <td class="amount ${crData.totaleDisponibile < 0 ? 'negative' : 'positive'}">${formatCurrency(crData.totaleDisponibile)}</td>
-          <td>${formatPercent(crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0)}</td>
-          <td>—</td>
+          <td class="text-right amount">${formatCurrency(crData.totals.accordato)}</td>
+          <td class="text-right amount">${formatCurrency(crData.totals.accordatoOperativo)}</td>
+          <td class="text-right amount">${formatCurrency(crData.totals.utilizzato)}</td>
+          <td class="text-right amount">${formatCurrency(crData.totals.saldoMedio)}</td>
+          <td class="text-right">
+            <span class="badge badge-info">${formatPercent(totUtilizzo)}</span>
+          </td>
         </tr>
       `;
-
-      // Add anomalies if present
-      if (crData.sofferenze > 0 || crData.sconfinamenti > 0 || crData.inadempienze > 0) {
-        tbody.innerHTML += `
-          <tr><td colspan="6" style="background: var(--gray-100); font-weight: 600; color: var(--danger);">⚠️ Anomalie</td></tr>
-        `;
-
-        if (crData.sofferenze > 0) {
-          tbody.innerHTML += `
-            <tr>
-              <td>Sofferenze</td>
-              <td colspan="2" class="amount negative">${formatCurrency(crData.sofferenze)}</td>
-              <td colspan="3"><span class="status-badge status-sofferenza">Sofferenza</span></td>
-            </tr>
-          `;
-        }
-
-        if (crData.sconfinamenti > 0) {
-          tbody.innerHTML += `
-            <tr>
-              <td>Sconfinamenti</td>
-              <td colspan="2" class="amount negative">${formatCurrency(crData.sconfinamenti)}</td>
-              <td colspan="3"><span class="status-badge status-sconfinato">Sconfinamento</span></td>
-            </tr>
-          `;
-        }
-
-        if (crData.inadempienze > 0) {
-          tbody.innerHTML += `
-            <tr>
-              <td>Inadempienze Probabili</td>
-              <td colspan="2" class="amount negative">${formatCurrency(crData.inadempienze)}</td>
-              <td colspan="3"><span class="status-badge status-incaglio">Inadempienza</span></td>
-            </tr>
-          `;
-        }
-      }
     }
 
-    // ==========================================
-    // CHARTS
-    // ==========================================
+    function displayIntermediari() {
+      const container = document.getElementById('intermediariBody');
 
-    function updateCharts() {
+      if (crData.intermediari.length === 0) {
+        container.innerHTML = '<p>Nessun intermediario rilevato.</p>';
+        return;
+      }
+
+      container.innerHTML = crData.intermediari.map((int, idx) => {
+        const utilizzo = int.totals.accordatoOp > 0
+          ? int.totals.utilizzato / int.totals.accordatoOp
+          : 0;
+
+        return `
+          <div class="bank-section">
+            <div class="bank-header" onclick="toggleBank(${idx})">
+              <span>🏦 ${int.nome}</span>
+              <span class="badge ${utilizzo > 0.9 ? 'badge-danger' : utilizzo > 0.7 ? 'badge-warning' : 'badge-success'}">
+                Utilizzo: ${formatPercent(utilizzo)}
+              </span>
+            </div>
+            <div class="bank-body ${idx === 0 ? 'open' : ''}" id="bank-${idx}">
+              <div class="bank-summary">
+                <div class="bank-stat">
+                  <label>Accordato</label>
+                  <span>${formatCurrency(int.totals.accordato)}</span>
+                </div>
+                <div class="bank-stat">
+                  <label>Accordato Op.</label>
+                  <span>${formatCurrency(int.totals.accordatoOp)}</span>
+                </div>
+                <div class="bank-stat">
+                  <label>Utilizzato</label>
+                  <span>${formatCurrency(int.totals.utilizzato)}</span>
+                </div>
+                <div class="bank-stat">
+                  <label>Saldo Medio</label>
+                  <span>${formatCurrency(int.totals.saldoMedio)}</span>
+                </div>
+              </div>
+              ${int.linee.length > 0 ? `
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Categoria</th>
+                      <th class="text-right">Accordato</th>
+                      <th class="text-right">Utilizzato</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${int.linee.map(l => `
+                      <tr>
+                        <td>${l.categoria}</td>
+                        <td class="text-right amount">${formatCurrency(l.accordato)}</td>
+                        <td class="text-right amount">${formatCurrency(l.utilizzato)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              ` : '<p>Nessuna linea di credito dettagliata.</p>'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function displayDettaglio() {
+      const tbody = document.getElementById('dettaglioBody');
+      let rows = [];
+
+      crData.intermediari.forEach(int => {
+        int.linee.forEach(linea => {
+          rows.push(`
+            <tr>
+              <td>${int.nome}</td>
+              <td>${linea.categoria}</td>
+              <td>-</td>
+              <td>-</td>
+              <td class="text-right amount">${formatCurrency(linea.accordato)}</td>
+              <td class="text-right amount">${formatCurrency(linea.utilizzato)}</td>
+              <td class="text-right amount">${formatCurrency(linea.saldoMedio)}</td>
+            </tr>
+          `);
+        });
+      });
+
+      tbody.innerHTML = rows.length > 0 ? rows.join('') : '<tr><td colspan="7">Nessun dettaglio disponibile</td></tr>';
+    }
+
+    function displayGaranzie() {
+      const container = document.getElementById('garanzieBody');
+
+      if (crData.garanzie.length === 0 && crData.totals.importoGarantito === 0) {
+        container.innerHTML = `
+          <div class="alert alert-info">
+            <span>ℹ️</span>
+            <div>Nessuna garanzia rilevata nel documento.</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Garante</th>
+                <th class="text-right">Valore Garanzia</th>
+                <th class="text-right">Importo Garantito</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${crData.garanzie.map(g => `
+                <tr>
+                  <td>${g.descrizione}</td>
+                  <td class="text-right amount">${formatCurrency(g.valoreGaranzia)}</td>
+                  <td class="text-right amount">${formatCurrency(g.importoGarantito)}</td>
+                </tr>
+              `).join('')}
+              <tr style="background: #f8fafc; font-weight: 600;">
+                <td>TOTALE</td>
+                <td class="text-right amount">${formatCurrency(crData.garanzie.reduce((sum, g) => sum + g.valoreGaranzia, 0))}</td>
+                <td class="text-right amount">${formatCurrency(crData.totals.importoGarantito)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function displayCharts() {
       // Destroy existing charts
-      Object.values(charts).forEach(chart => chart && chart.destroy());
+      Object.values(charts).forEach(c => c && c.destroy());
 
-      // Chart 1: Accordato vs Utilizzato
-      const ctx1 = document.getElementById('chartAccordato').getContext('2d');
-      charts.accordato = new Chart(ctx1, {
+      // Chart: Categoria
+      const ctx1 = document.getElementById('chartCategoria');
+      charts.categoria = new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+          labels: ['Autoliquidanti', 'A Scadenza', 'A Revoca'],
+          datasets: [{
+            data: [
+              crData.categorie.autoliquidanti.utilizzato,
+              crData.categorie.scadenza.utilizzato,
+              crData.categorie.revoca.utilizzato
+            ],
+            backgroundColor: ['#3182ce', '#38a169', '#d69e2e']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+
+      // Chart: Utilizzo
+      const ctx2 = document.getElementById('chartUtilizzo');
+      charts.utilizzo = new Chart(ctx2, {
         type: 'bar',
         data: {
-          labels: ['Autoliquidanti', 'A Scadenza', 'A Revoca', 'Garanzie'],
+          labels: ['Autoliquidanti', 'A Scadenza', 'A Revoca'],
           datasets: [
             {
               label: 'Accordato',
               data: [
-                crData.autoliquidanti.accordato,
-                crData.scadenza.accordato,
-                crData.revoca.accordato,
-                crData.garanzie.accordato
+                crData.categorie.autoliquidanti.accordatoOp,
+                crData.categorie.scadenza.accordatoOp,
+                crData.categorie.revoca.accordatoOp
               ],
-              backgroundColor: 'rgba(0, 102, 204, 0.7)',
-              borderColor: '#0066cc',
-              borderWidth: 1
+              backgroundColor: 'rgba(49, 130, 206, 0.7)'
             },
             {
               label: 'Utilizzato',
               data: [
-                crData.autoliquidanti.utilizzato,
-                crData.scadenza.utilizzato,
-                crData.revoca.utilizzato,
-                crData.garanzie.utilizzato
+                crData.categorie.autoliquidanti.utilizzato,
+                crData.categorie.scadenza.utilizzato,
+                crData.categorie.revoca.utilizzato
               ],
-              backgroundColor: 'rgba(0, 168, 107, 0.7)',
-              borderColor: '#00a86b',
-              borderWidth: 1
+              backgroundColor: 'rgba(56, 161, 105, 0.7)'
             }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom' }
-          },
+          plugins: { legend: { position: 'bottom' } },
           scales: {
             y: {
               beginAtZero: true,
-              ticks: {
-                callback: value => formatCurrency(value)
-              }
+              ticks: { callback: v => formatCurrency(v) }
             }
           }
         }
       });
 
-      // Chart 2: Distribution Pie
-      const ctx2 = document.getElementById('chartTipologia').getContext('2d');
-      charts.tipologia = new Chart(ctx2, {
-        type: 'doughnut',
+      // Chart: Intermediari
+      const ctx3 = document.getElementById('chartIntermediari');
+      charts.intermediari = new Chart(ctx3, {
+        type: 'pie',
         data: {
-          labels: ['Autoliquidanti', 'A Scadenza', 'A Revoca', 'Garanzie'],
+          labels: crData.intermediari.map(i => i.nome.substring(0, 20)),
           datasets: [{
-            data: [
-              crData.autoliquidanti.utilizzato,
-              crData.scadenza.utilizzato,
-              crData.revoca.utilizzato,
-              crData.garanzie.utilizzato
-            ],
-            backgroundColor: [
-              '#0066cc',
-              '#00a86b',
-              '#ffc107',
-              '#9c27b0'
-            ]
+            data: crData.intermediari.map(i => i.totals.utilizzato),
+            backgroundColor: ['#3182ce', '#38a169', '#d69e2e', '#e53e3e', '#805ad5']
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom' }
-          }
+          plugins: { legend: { position: 'bottom' } }
         }
       });
 
-      // Chart 3: Risk Radar
-      const ctx3 = document.getElementById('chartRischio').getContext('2d');
-      const utilizzoRate = crData.totaleAccordato > 0 ? (crData.totaleUtilizzato / crData.totaleAccordato) * 100 : 0;
-      const sofferenzeRate = crData.totaleUtilizzato > 0 ? (crData.sofferenze / crData.totaleUtilizzato) * 100 : 0;
-      const sconfinamentiRate = crData.totaleUtilizzato > 0 ? (crData.sconfinamenti / crData.totaleUtilizzato) * 100 : 0;
+      // Chart: Rischio
+      const ctx4 = document.getElementById('chartRischio');
+      const utilizzoRate = crData.totals.accordatoOperativo > 0
+        ? (crData.totals.utilizzato / crData.totals.accordatoOperativo) * 100
+        : 0;
+      const scadutiRate = crData.totals.utilizzato > 0
+        ? ((crData.creditiScaduti.pagati + crData.creditiScaduti.impagati) / crData.totals.utilizzato) * 100
+        : 0;
 
-      charts.rischio = new Chart(ctx3, {
+      charts.rischio = new Chart(ctx4, {
         type: 'radar',
         data: {
-          labels: ['Utilizzo Fidi', 'Sofferenze', 'Sconfinamenti', 'Concentrazione', 'Garanzie'],
+          labels: ['Utilizzo Fidi', 'Crediti Scaduti', 'Concentrazione', 'Garanzie'],
           datasets: [{
             label: 'Profilo Rischio',
             data: [
               Math.min(utilizzoRate, 100),
-              Math.min(sofferenzeRate * 10, 100),
-              Math.min(sconfinamentiRate * 10, 100),
-              crData.numIntermediari > 3 ? 30 : 60,
-              crData.garanzie.utilizzato > 0 ? 40 : 20
+              Math.min(scadutiRate * 10, 100),
+              crData.intermediari.length > 2 ? 30 : 70,
+              crData.totals.importoGarantito > 0 ? 30 : 60
             ],
-            backgroundColor: 'rgba(220, 53, 69, 0.2)',
-            borderColor: '#dc3545',
-            borderWidth: 2,
-            pointBackgroundColor: '#dc3545'
+            backgroundColor: 'rgba(229, 62, 62, 0.2)',
+            borderColor: '#e53e3e',
+            borderWidth: 2
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          scales: {
-            r: {
-              beginAtZero: true,
-              max: 100
-            }
-          },
-          plugins: {
-            legend: { display: false }
-          }
-        }
-      });
-
-      // Chart 4: Historical (placeholder)
-      const ctx4 = document.getElementById('chartStorico').getContext('2d');
-      charts.storico = new Chart(ctx4, {
-        type: 'line',
-        data: {
-          labels: [crData.dataRiferimento],
-          datasets: [
-            {
-              label: 'Accordato',
-              data: [crData.totaleAccordato],
-              borderColor: '#0066cc',
-              backgroundColor: 'rgba(0, 102, 204, 0.1)',
-              fill: true,
-              tension: 0.4
-            },
-            {
-              label: 'Utilizzato',
-              data: [crData.totaleUtilizzato],
-              borderColor: '#00a86b',
-              backgroundColor: 'rgba(0, 168, 107, 0.1)',
-              fill: true,
-              tension: 0.4
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom' }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                callback: value => formatCurrency(value)
-              }
-            }
-          }
+          scales: { r: { beginAtZero: true, max: 100 } },
+          plugins: { legend: { display: false } }
         }
       });
     }
 
     // ==========================================
-    // CREDIT SCORE CALCULATION
+    // UI FUNCTIONS
     // ==========================================
 
-    function calculateScore() {
-      let score = 100;
-      let breakdown = {
-        utilizzo: 25,
-        sofferenze: 30,
-        sconfinamenti: 25,
-        diversificazione: 20
-      };
-
-      // Factor 1: Utilizzo fidi (max 25 points)
-      const utilizzoRate = crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0;
-      if (utilizzoRate > 0.95) breakdown.utilizzo = 0;
-      else if (utilizzoRate > 0.85) breakdown.utilizzo = 10;
-      else if (utilizzoRate > 0.70) breakdown.utilizzo = 18;
-      else breakdown.utilizzo = 25;
-
-      // Factor 2: Sofferenze (max 30 points)
-      if (crData.sofferenze > 0) {
-        const sofferenzeRate = crData.sofferenze / crData.totaleUtilizzato;
-        if (sofferenzeRate > 0.1) breakdown.sofferenze = 0;
-        else if (sofferenzeRate > 0.05) breakdown.sofferenze = 10;
-        else breakdown.sofferenze = 15;
-      } else {
-        breakdown.sofferenze = 30;
-      }
-
-      // Factor 3: Sconfinamenti (max 25 points)
-      if (crData.sconfinamenti > 0) {
-        const sconfinamentiRate = crData.sconfinamenti / crData.totaleUtilizzato;
-        if (sconfinamentiRate > 0.1) breakdown.sconfinamenti = 0;
-        else if (sconfinamentiRate > 0.05) breakdown.sconfinamenti = 10;
-        else breakdown.sconfinamenti = 15;
-      } else {
-        breakdown.sconfinamenti = 25;
-      }
-
-      // Factor 4: Diversificazione (max 20 points)
-      if (crData.numIntermediari >= 3) breakdown.diversificazione = 20;
-      else if (crData.numIntermediari === 2) breakdown.diversificazione = 15;
-      else breakdown.diversificazione = 10;
-
-      score = breakdown.utilizzo + breakdown.sofferenze + breakdown.sconfinamenti + breakdown.diversificazione;
-
-      // Update UI
-      const scoreCircle = document.getElementById('scoreCircle');
-      const scoreValue = document.getElementById('scoreValue');
-      const scoreDescription = document.getElementById('scoreDescription');
-
-      let scoreColor = '#dc3545';
-      let description = 'Critico';
-
-      if (score >= 80) {
-        scoreColor = '#00a86b';
-        description = 'Eccellente - Profilo creditizio ottimo';
-      } else if (score >= 60) {
-        scoreColor = '#17a2b8';
-        description = 'Buono - Profilo creditizio nella norma';
-      } else if (score >= 40) {
-        scoreColor = '#ffc107';
-        description = 'Attenzione - Alcune criticità presenti';
-      } else {
-        description = 'Critico - Significative problematiche creditizie';
-      }
-
-      scoreCircle.style.setProperty('--score', score);
-      scoreCircle.style.setProperty('--score-color', scoreColor);
-      scoreValue.textContent = score;
-      scoreValue.style.color = scoreColor;
-      scoreDescription.textContent = description;
-
-      // Update breakdown
-      document.getElementById('scoreUtilizzo').textContent = `${breakdown.utilizzo}/25`;
-      document.getElementById('scoreSofferenze').textContent = `${breakdown.sofferenze}/30`;
-      document.getElementById('scoreSconfinamenti').textContent = `${breakdown.sconfinamenti}/25`;
-      document.getElementById('scoreDiversificazione').textContent = `${breakdown.diversificazione}/20`;
+    function toggleBank(idx) {
+      const body = document.getElementById(`bank-${idx}`);
+      body.classList.toggle('open');
     }
 
-    // ==========================================
-    // REPORT GENERATION
-    // ==========================================
-
-    function generateReport() {
-      const reportContent = document.getElementById('reportContent');
-      const utilizzoRate = crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0;
-
-      reportContent.innerHTML = `
-        <div style="margin-bottom: 2rem;">
-          <h2 style="color: var(--primary); margin-bottom: 0.5rem;">Report Analisi Centrale Rischi</h2>
-          <p style="color: var(--gray-500);">Generato il ${new Date().toLocaleDateString('it-IT', { dateStyle: 'full' })}</p>
-        </div>
-
-        <div style="margin-bottom: 1.5rem;">
-          <h4 style="margin-bottom: 0.5rem;">📋 Dati Anagrafici</h4>
-          <table style="width: 100%;">
-            <tr><td style="width: 200px; color: var(--gray-500);">Denominazione</td><td><strong>${crData.denominazione}</strong></td></tr>
-            <tr><td style="color: var(--gray-500);">Codice Fiscale</td><td>${crData.codiceFiscale}</td></tr>
-            <tr><td style="color: var(--gray-500);">Data Riferimento CR</td><td>${formatDateIT(crData.dataRiferimento)}</td></tr>
-            <tr><td style="color: var(--gray-500);">N° Intermediari</td><td>${crData.numIntermediari}</td></tr>
-          </table>
-        </div>
-
-        <div style="margin-bottom: 1.5rem;">
-          <h4 style="margin-bottom: 0.5rem;">💰 Sintesi Esposizione</h4>
-          <table style="width: 100%;">
-            <tr><td style="width: 200px; color: var(--gray-500);">Totale Accordato</td><td><strong>${formatCurrency(crData.totaleAccordato)}</strong></td></tr>
-            <tr><td style="color: var(--gray-500);">Totale Utilizzato</td><td><strong>${formatCurrency(crData.totaleUtilizzato)}</strong></td></tr>
-            <tr><td style="color: var(--gray-500);">Margine Disponibile</td><td><strong>${formatCurrency(crData.totaleDisponibile)}</strong></td></tr>
-            <tr><td style="color: var(--gray-500);">Tasso di Utilizzo</td><td><strong>${formatPercent(utilizzoRate)}</strong></td></tr>
-          </table>
-        </div>
-
-        <div style="margin-bottom: 1.5rem;">
-          <h4 style="margin-bottom: 0.5rem;">⚠️ Anomalie e Criticità</h4>
-          <table style="width: 100%;">
-            <tr>
-              <td style="width: 200px; color: var(--gray-500);">Sofferenze</td>
-              <td style="color: ${crData.sofferenze > 0 ? 'var(--danger)' : 'var(--secondary)'}">
-                <strong>${crData.sofferenze > 0 ? formatCurrency(crData.sofferenze) : 'Nessuna'}</strong>
-              </td>
-            </tr>
-            <tr>
-              <td style="color: var(--gray-500);">Sconfinamenti</td>
-              <td style="color: ${crData.sconfinamenti > 0 ? 'var(--warning)' : 'var(--secondary)'}">
-                <strong>${crData.sconfinamenti > 0 ? formatCurrency(crData.sconfinamenti) : 'Nessuno'}</strong>
-              </td>
-            </tr>
-            <tr>
-              <td style="color: var(--gray-500);">Inadempienze Probabili</td>
-              <td style="color: ${crData.inadempienze > 0 ? 'var(--danger)' : 'var(--secondary)'}">
-                <strong>${crData.inadempienze > 0 ? formatCurrency(crData.inadempienze) : 'Nessuna'}</strong>
-              </td>
-            </tr>
-          </table>
-        </div>
-
-        <div style="margin-bottom: 1.5rem;">
-          <h4 style="margin-bottom: 0.5rem;">📊 Valutazione</h4>
-          <p>${getEvaluationText()}</p>
-        </div>
-
-        <div style="border-top: 1px solid var(--gray-200); padding-top: 1rem; margin-top: 2rem; font-size: 0.8rem; color: var(--gray-500);">
-          <p>Questo report è generato automaticamente da Scan360 CR Technology sulla base dei dati forniti.
-          Non costituisce consulenza finanziaria. Si consiglia di verificare sempre i dati con la documentazione ufficiale della Banca d'Italia.</p>
-        </div>
-      `;
+    function resetAnalysis() {
+      uploadSection.style.display = 'block';
+      progressSection.classList.remove('active');
+      results.classList.remove('active');
+      fileInput.value = '';
     }
 
-    function getEvaluationText() {
-      const utilizzoRate = crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0;
-
-      let text = '';
-
-      if (crData.sofferenze > 0) {
-        text += `<p style="color: var(--danger);">❌ <strong>Presenza di sofferenze:</strong> L'importo di ${formatCurrency(crData.sofferenze)} in sofferenza rappresenta un elemento critico che compromette significativamente il merito creditizio del soggetto.</p>`;
-      }
-
-      if (crData.sconfinamenti > 0) {
-        text += `<p style="color: var(--warning);">⚠️ <strong>Sconfinamenti rilevati:</strong> Gli sconfinamenti per ${formatCurrency(crData.sconfinamenti)} indicano un utilizzo oltre i limiti concessi.</p>`;
-      }
-
-      if (utilizzoRate > 0.85) {
-        text += `<p style="color: var(--warning);">⚠️ <strong>Elevato utilizzo fidi:</strong> Con un tasso di utilizzo del ${formatPercent(utilizzoRate)}, il soggetto presenta una limitata capacità di assorbimento di ulteriori esigenze finanziarie.</p>`;
-      }
-
-      if (crData.sofferenze === 0 && crData.sconfinamenti === 0 && utilizzoRate < 0.7) {
-        text += `<p style="color: var(--secondary);">✅ <strong>Situazione regolare:</strong> Il profilo creditizio non presenta anomalie significative. Il tasso di utilizzo del ${formatPercent(utilizzoRate)} lascia adeguati margini di manovra.</p>`;
-      }
-
-      return text || '<p>Analisi non disponibile.</p>';
-    }
-
-    // ==========================================
-    // UTILITIES
-    // ==========================================
-
-    function showProgress() {
-      progressContainer.classList.add('active');
-      uploadZone.classList.add('processing');
-    }
-
-    function hideProgress() {
-      progressContainer.classList.remove('active');
-      uploadZone.classList.remove('processing');
-    }
-
-    function updateProgress(percent, text) {
-      progressFill.style.width = percent + '%';
-      progressText.textContent = text;
-    }
-
-    function exportTable() {
+    function exportCSV() {
       const rows = [
-        ['Tipologia', 'Accordato', 'Utilizzato', 'Disponibile', '% Utilizzo'],
-        ['Autoliquidanti', crData.autoliquidanti.accordato, crData.autoliquidanti.utilizzato, crData.autoliquidanti.accordato - crData.autoliquidanti.utilizzato, (crData.autoliquidanti.accordato > 0 ? crData.autoliquidanti.utilizzato / crData.autoliquidanti.accordato * 100 : 0).toFixed(1) + '%'],
-        ['A Scadenza', crData.scadenza.accordato, crData.scadenza.utilizzato, crData.scadenza.accordato - crData.scadenza.utilizzato, (crData.scadenza.accordato > 0 ? crData.scadenza.utilizzato / crData.scadenza.accordato * 100 : 0).toFixed(1) + '%'],
-        ['A Revoca', crData.revoca.accordato, crData.revoca.utilizzato, crData.revoca.accordato - crData.revoca.utilizzato, (crData.revoca.accordato > 0 ? crData.revoca.utilizzato / crData.revoca.accordato * 100 : 0).toFixed(1) + '%'],
-        ['Garanzie', crData.garanzie.accordato, crData.garanzie.utilizzato, crData.garanzie.accordato - crData.garanzie.utilizzato, (crData.garanzie.accordato > 0 ? crData.garanzie.utilizzato / crData.garanzie.accordato * 100 : 0).toFixed(1) + '%'],
-        ['TOTALE', crData.totaleAccordato, crData.totaleUtilizzato, crData.totaleDisponibile, (crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato * 100 : 0).toFixed(1) + '%']
+        ['Categoria', 'Accordato', 'Accordato Op.', 'Utilizzato', 'Saldo Medio'],
+        ['Autoliquidanti', crData.categorie.autoliquidanti.accordato, crData.categorie.autoliquidanti.accordatoOp, crData.categorie.autoliquidanti.utilizzato, crData.categorie.autoliquidanti.saldoMedio],
+        ['A Scadenza', crData.categorie.scadenza.accordato, crData.categorie.scadenza.accordatoOp, crData.categorie.scadenza.utilizzato, crData.categorie.scadenza.saldoMedio],
+        ['A Revoca', crData.categorie.revoca.accordato, crData.categorie.revoca.accordatoOp, crData.categorie.revoca.utilizzato, crData.categorie.revoca.saldoMedio],
+        ['TOTALE', crData.totals.accordato, crData.totals.accordatoOperativo, crData.totals.utilizzato, crData.totals.saldoMedio]
       ];
 
-      const csv = rows.map(row => row.join(';')).join('\n');
+      const csv = rows.map(r => r.join(';')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `CR_${crData.denominazione.replace(/\s+/g, '_')}_${crData.dataRiferimento}.csv`;
+      a.download = `CR_${crData.intestatario || 'export'}_${crData.dataRiferimento || 'data'}.csv`;
       a.click();
       URL.revokeObjectURL(url);
     }
 
-    function printReport() {
-      window.print();
-    }
-
-    function downloadReport() {
-      // Simple text-based report download
-      const report = `
-REPORT ANALISI CENTRALE RISCHI
-==============================
-Generato da Scan360 CR Technology
-Data: ${new Date().toLocaleDateString('it-IT')}
-
-DATI ANAGRAFICI
----------------
-Denominazione: ${crData.denominazione}
-Codice Fiscale: ${crData.codiceFiscale}
-Data Riferimento: ${formatDateIT(crData.dataRiferimento)}
-N° Intermediari: ${crData.numIntermediari}
-
-SINTESI ESPOSIZIONE
--------------------
-Totale Accordato: ${formatCurrency(crData.totaleAccordato)}
-Totale Utilizzato: ${formatCurrency(crData.totaleUtilizzato)}
-Margine Disponibile: ${formatCurrency(crData.totaleDisponibile)}
-Tasso di Utilizzo: ${formatPercent(crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0)}
-
-DETTAGLIO LINEE
----------------
-Autoliquidanti: Accordato ${formatCurrency(crData.autoliquidanti.accordato)} / Utilizzato ${formatCurrency(crData.autoliquidanti.utilizzato)}
-A Scadenza: Accordato ${formatCurrency(crData.scadenza.accordato)} / Utilizzato ${formatCurrency(crData.scadenza.utilizzato)}
-A Revoca: Accordato ${formatCurrency(crData.revoca.accordato)} / Utilizzato ${formatCurrency(crData.revoca.utilizzato)}
-Garanzie: Accordato ${formatCurrency(crData.garanzie.accordato)} / Utilizzato ${formatCurrency(crData.garanzie.utilizzato)}
-
-ANOMALIE
---------
-Sofferenze: ${crData.sofferenze > 0 ? formatCurrency(crData.sofferenze) : 'Nessuna'}
-Sconfinamenti: ${crData.sconfinamenti > 0 ? formatCurrency(crData.sconfinamenti) : 'Nessuno'}
-Inadempienze: ${crData.inadempienze > 0 ? formatCurrency(crData.inadempienze) : 'Nessuna'}
-
----
-Scan360 CR Technology - Analisi Automatizzata Centrale Rischi
-      `;
-
-      const blob = new Blob([report], { type: 'text/plain;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Report_CR_${crData.denominazione.replace(/\s+/g, '_')}_${crData.dataRiferimento}.txt`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    // ==========================================
-    // TABS NAVIGATION
-    // ==========================================
-
+    // Tab navigation
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-
-        const tabName = tab.dataset.tab;
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        document.getElementById('panel-' + tabName).classList.add('active');
+        tab.classList.add('active');
+        document.getElementById(`panel-${tab.dataset.tab}`).classList.add('active');
       });
     });
-
-    // ==========================================
-    // DEMO DATA (for testing)
-    // ==========================================
-
-    function loadDemoData() {
-      crData = {
-        denominazione: 'Esempio S.r.l.',
-        codiceFiscale: '01234567890',
-        dataRiferimento: '2024-09-30',
-        numIntermediari: 3,
-        autoliquidanti: { accordato: 150000, utilizzato: 85000 },
-        scadenza: { accordato: 500000, utilizzato: 420000 },
-        revoca: { accordato: 100000, utilizzato: 75000 },
-        garanzie: { accordato: 50000, utilizzato: 30000 },
-        sconfinamenti: 0,
-        sofferenze: 0,
-        inadempienze: 0,
-        passaggiPerdita: 0,
-        totaleAccordato: 800000,
-        totaleUtilizzato: 610000,
-        totaleDisponibile: 190000
-      };
-      displayResults();
-    }
-
-    // Uncomment to auto-load demo data for testing:
-    // loadDemoData();
 
   </script>
 </body>
