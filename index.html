@@ -3,925 +3,1974 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Task Manager – Standalone</title>
-  <meta name="description" content="Task Manager standalone: CRUD, filtri, statistiche, import/export – senza build" />
+  <title>Scan360 - Analisi Centrale Rischi</title>
+  <meta name="description" content="Scan360 CR Technology - Analisi intelligente dei certificati di Centrale Rischi Banca d'Italia" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+
+  <!-- PDF.js per lettura PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- Tesseract.js per OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  <!-- Chart.js per grafici -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
   <style>
-    /* -----------------------
-       DESIGN SYSTEM (Specs)
-       ----------------------- */
     :root {
-      --primary: #1d4ed8;      /* Blu principale */
-      --success: #22c55e;      /* Verde successo */
-      --warning: #f97316;      /* Arancione warning */
-      --danger: #dc2626;       /* Rosso pericolo */
-      --yellow: #facc15;       /* Giallo media priorità */
-
-      --gray-50: #f9fafb;
-      --gray-100: #f3f4f6;
-      --gray-200: #e5e7eb;
-      --gray-300: #d1d5db;
-      --gray-500: #6b7280;
-      --gray-700: #374151;
-      --gray-900: #111827;
-
-      --text-xs: 0.75rem;     /* 12px */
-      --text-sm: 0.875rem;    /* 14px */
-      --text-base: 1rem;      /* 16px */
-      --text-lg: 1.125rem;    /* 18px */
-      --text-xl: 1.25rem;     /* 20px */
-      --text-2xl: 1.5rem;     /* 24px */
-
-      --container-max-width: 1200px;
-      --grid-gap: 20px;
-      --card-padding: 20px;
-      --form-gap: 12px;
-
-      --radius-sm: 6px;
-      --radius-md: 8px;
-      --radius-lg: 10px;
-      --radius-full: 999px;
-
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-      --shadow-lg: 0 10px 30px rgba(0,0,0,0.2);
+      --primary: #0066cc;
+      --primary-dark: #004999;
+      --secondary: #00a86b;
+      --danger: #dc3545;
+      --warning: #ffc107;
+      --info: #17a2b8;
+      --dark: #1a1a2e;
+      --gray-50: #f8f9fa;
+      --gray-100: #f1f3f5;
+      --gray-200: #e9ecef;
+      --gray-300: #dee2e6;
+      --gray-500: #6c757d;
+      --gray-700: #495057;
+      --gray-900: #212529;
+      --radius: 12px;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+      --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
     }
 
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--gray-900); background: var(--gray-50); }
-    a { color: var(--primary); text-decoration: none; }
-    button { cursor: pointer; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    .container { max-width: var(--container-max-width); margin: 0 auto; padding: 20px; }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      min-height: 100vh;
+      color: var(--gray-900);
+    }
 
     /* Header */
-    header.app-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-    .title { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
-    .title .emoji { font-size: 1.6rem; }
-    .today { color: var(--gray-700); font-size: var(--text-sm); }
+    .header {
+      background: linear-gradient(135deg, var(--dark) 0%, #16213e 100%);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow);
+    }
 
-    /* Stats cards */
-    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 12px 0 18px; }
-    @media (min-width: 768px) { .stats { grid-template-columns: repeat(4, 1fr); } }
-    .stat { background: white; border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 6px; }
-    .stat .label { color: var(--gray-500); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.04em; }
-    .stat .value { font-size: 1.25rem; font-weight: 700; }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .logo-text h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text span {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Upload Zone */
+    .upload-zone {
+      background: white;
+      border: 3px dashed var(--gray-300);
+      border-radius: var(--radius);
+      padding: 3rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      margin-bottom: 2rem;
+    }
+
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--primary);
+      background: rgba(0, 102, 204, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .upload-zone.processing {
+      border-color: var(--warning);
+      background: rgba(255, 193, 7, 0.05);
+    }
+
+    .upload-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .upload-zone h2 {
+      color: var(--gray-700);
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-zone p {
+      color: var(--gray-500);
+      margin-bottom: 1rem;
+    }
+
+    .upload-formats {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .format-badge {
+      background: var(--gray-100);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: var(--gray-700);
+      font-weight: 600;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 102, 204, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--gray-200);
+      color: var(--gray-700);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--secondary) 0%, #008f5b 100%);
+      color: white;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      display: none;
+      margin: 1.5rem 0;
+    }
+
+    .progress-container.active {
+      display: block;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: var(--gray-200);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      text-align: center;
+      margin-top: 8px;
+      color: var(--gray-600);
+      font-size: 0.875rem;
+    }
+
+    /* Results Section */
+    .results {
+      display: none;
+    }
+
+    .results.active {
+      display: block;
+    }
+
+    /* Summary Cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .summary-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .summary-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+
+    .summary-card.total::before { background: var(--primary); }
+    .summary-card.utilizzato::before { background: var(--secondary); }
+    .summary-card.disponibile::before { background: var(--info); }
+    .summary-card.sofferenze::before { background: var(--danger); }
+    .summary-card.sconfinamenti::before { background: var(--warning); }
+    .summary-card.garanzie::before { background: #9c27b0; }
+
+    .summary-card .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--gray-500);
+      margin-bottom: 8px;
+    }
+
+    .summary-card .value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+
+    .summary-card .trend {
+      font-size: 0.8rem;
+      margin-top: 8px;
+    }
+
+    .trend.positive { color: var(--secondary); }
+    .trend.negative { color: var(--danger); }
+    .trend.neutral { color: var(--gray-500); }
 
     /* Tabs */
-    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 16px; }
-    .tab { border: 1px solid var(--gray-200); background: white; color: var(--gray-900); border-radius: var(--radius-full); padding: 8px 14px; font-size: var(--text-sm); display: inline-flex; align-items: center; gap: 6px; box-shadow: var(--shadow-sm); }
-    .tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--gray-100);
+      padding: 4px;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
 
-    /* Toolbar (filters + actions) */
-    .toolbar { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 10px 0 16px; }
-    @media (min-width: 768px) { .toolbar { grid-template-columns: 1fr auto; align-items: start; } }
-    .filters { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 12px; box-shadow: var(--shadow-sm); display: grid; gap: 10px; grid-template-columns: 1fr; }
-    @media (min-width: 768px) { .filters { grid-template-columns: 1fr 180px 180px; } }
-    .filters .group { display: flex; gap: 10px; align-items: center; }
-    .filters label { font-size: var(--text-sm); color: var(--gray-700); }
-    .filters input[type="text"], .filters select { width: 100%; padding: 8px 10px; border-radius: var(--radius-md); border: 1px solid var(--gray-300); background: white; font-size: var(--text-sm); }
-    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tab {
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--gray-600);
+      transition: all 0.2s ease;
+    }
 
-    .btn { padding: 9px 12px; border-radius: var(--radius-md); border: 1px solid var(--gray-300); background: white; color: var(--gray-900); box-shadow: var(--shadow-sm); font-size: var(--text-sm); }
-    .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
-    .btn.success { background: var(--success); color: #fff; border-color: var(--success); }
-    .btn.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
-    .btn.warn { background: var(--warning); color: #fff; border-color: var(--warning); }
-    .btn.ghost { background: transparent; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .tab:hover {
+      color: var(--gray-900);
+    }
 
-    /* Grid */
-    .task-grid { display: grid; grid-template-columns: 1fr; gap: var(--grid-gap); }
-    @media (min-width: 768px) { .task-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (min-width: 1024px) { .task-grid { grid-template-columns: repeat(3, 1fr); } }
+    .tab.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
 
-    /* Task card */
-    .task-card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: var(--card-padding); box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease; }
-    .task-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-    .task-card header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-    .priority-badge { padding: 4px 8px; border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 700; color: white; }
-    .prio-critica { background: var(--danger); }
-    .prio-alta { background: var(--warning); }
-    .prio-media { background: var(--yellow); color: #111; }
-    .prio-bassa { background: var(--success); }
-    .task-card .actions { display: flex; gap: 6px; }
+    /* Panel */
+    .panel {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: none;
+    }
 
-    .task-card h3 { margin: 0 0 6px; font-size: var(--text-lg); }
-    .meta { color: var(--gray-700); font-size: var(--text-sm); display: flex; gap: 10px; flex-wrap: wrap; }
-    .notes { margin: 8px 0 12px; font-size: var(--text-sm); color: var(--gray-900); white-space: pre-wrap; }
+    .panel.active {
+      display: block;
+    }
 
-    .progress { height: 8px; background: var(--gray-100); border-radius: var(--radius-full); overflow: hidden; margin: 6px 0 10px; border: 1px solid var(--gray-200); }
-    .progress .fill { height: 100%; background: linear-gradient(90deg, var(--primary), #60a5fa); width: 0%; transition: width 0.2s ease; }
-    .controls { display: flex; gap: 6px; flex-wrap: wrap; }
+    .panel-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-    /* Empty state */
-    .empty { text-align: center; color: var(--gray-700); padding: 32px; border: 1px dashed var(--gray-300); border-radius: var(--radius-lg); background: #fff; }
+    .panel-header h3 {
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-    /* Completed list */
-    .completed-list { display: grid; gap: 10px; }
-    .completed-item { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-md); padding: 12px; }
-    .completed-item .info { display: flex; gap: 10px; flex-wrap: wrap; color: var(--gray-700); }
+    .panel-body {
+      padding: 1.5rem;
+    }
 
-    /* Settings */
-    .settings-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
-    @media (min-width: 768px) { .settings-grid { grid-template-columns: 1fr 1fr; } }
-    .settings-card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-sm); }
-    .settings-card h4 { margin: 0 0 10px; }
-    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--gray-300); border-radius: var(--radius-full); margin: 4px; background: var(--gray-100); }
+    /* Table */
+    .table-container {
+      overflow-x: auto;
+    }
 
-    /* Modal */
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; align-items: center; justify-content: center; padding: 16px; }
-    .modal-backdrop.open { display: flex; }
-    .modal { width: 100%; max-width: 640px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow: hidden; }
-    .modal header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--gray-200); }
-    .modal .content { padding: 16px; }
-    .form-grid { display: grid; grid-template-columns: 1fr; gap: var(--form-gap); }
-    @media (min-width: 640px) { .form-grid { grid-template-columns: 1fr 1fr; } }
-    .form-grid .full { grid-column: 1 / -1; }
-    .field { display: grid; gap: 6px; }
-    .field label { font-size: var(--text-sm); color: var(--gray-700); }
-    .field input, .field select, .field textarea { width: 100%; padding: 9px 10px; border-radius: var(--radius-md); border: 1px solid var(--gray-300); font-size: var(--text-sm); background: white; }
-    .help { font-size: var(--text-xs); color: var(--gray-500); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
 
-    /* Micro-interactions */
-    .button:hover { opacity: 0.92; }
-    .loading { animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--gray-200);
+    }
 
-    /* Footer note */
-    footer { text-align: center; color: var(--gray-500); font-size: var(--text-xs); margin: 24px 0 10px; }
-  
-/* --- Stats layout refinements --- */
-.charts-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
-@media (min-width: 900px) { .charts-grid { grid-template-columns: 1fr 1fr; } }
-.chart-box { background:#fff; border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:12px; }
-.chart-box h4 { margin: 0 0 8px; font-size: var(--text-base); }
-.stats-table { margin-top:8px; width:100%; border-collapse: collapse; font-size: var(--text-sm); }
-.stats-table th, .stats-table td { padding: 6px 8px; border-bottom: 1px dashed var(--gray-200); }
-.stats-table th { text-align: left; color: var(--gray-700); font-weight: 600; }
-.stats-table td { text-align: right; font-weight: 700; }
-.stats-canvas { width: 100%; height: 220px; display:block; }
+    th {
+      background: var(--gray-50);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--gray-600);
+    }
 
-  
-/* --- Compact chart containers --- */
-.chart-container { position: relative; width: 100%; height: 160px; }
-@media (max-width: 640px) { .chart-container { height: 140px; } }
-.stats-canvas { width: 100% !important; height: 100% !important; display: block; }
+    td {
+      font-size: 0.9rem;
+    }
 
+    tr:hover td {
+      background: var(--gray-50);
+    }
+
+    .amount {
+      font-weight: 600;
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .amount.positive { color: var(--secondary); }
+    .amount.negative { color: var(--danger); }
+
+    /* Status Badges */
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-regolare { background: #d4edda; color: #155724; }
+    .status-sconfinato { background: #fff3cd; color: #856404; }
+    .status-sofferenza { background: #f8d7da; color: #721c24; }
+    .status-incaglio { background: #ffe5d0; color: #94660c; }
+
+    /* Charts */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .chart-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .chart-card h4 {
+      margin-bottom: 1rem;
+      color: var(--gray-700);
+      font-size: 1rem;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 250px;
+    }
+
+    /* Info Section */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .info-item:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      color: var(--gray-500);
+      font-size: 0.9rem;
+    }
+
+    .info-value {
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+
+    /* Alert Box */
+    .alert {
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .alert-icon {
+      font-size: 1.25rem;
+    }
+
+    .alert-warning {
+      background: #fff3cd;
+      border-left: 4px solid var(--warning);
+    }
+
+    .alert-danger {
+      background: #f8d7da;
+      border-left: 4px solid var(--danger);
+    }
+
+    .alert-success {
+      background: #d4edda;
+      border-left: 4px solid var(--secondary);
+    }
+
+    .alert-info {
+      background: #cce5ff;
+      border-left: 4px solid var(--info);
+    }
+
+    /* Score Indicator */
+    .score-container {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .score-circle {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .score-circle::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      padding: 8px;
+      background: conic-gradient(var(--score-color) calc(var(--score) * 1%), var(--gray-200) 0);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+
+    .score-value {
+      font-size: 3rem;
+      font-weight: 700;
+    }
+
+    .score-label {
+      font-size: 0.9rem;
+      color: var(--gray-500);
+    }
+
+    .score-description {
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+
+    /* Manual Entry Form */
+    .manual-form {
+      display: none;
+      margin-top: 1.5rem;
+    }
+
+    .manual-form.active {
+      display: block;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--gray-700);
+    }
+
+    .form-group input, .form-group select {
+      padding: 10px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+
+    /* Hidden file input */
+    #fileInput {
+      display: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container { padding: 1rem; }
+      .header { padding: 1rem; }
+      .upload-zone { padding: 2rem 1rem; }
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Print Styles */
+    @media print {
+      .header, .upload-zone, .tabs, .btn { display: none; }
+      .results { display: block !important; }
+      .panel { display: block !important; box-shadow: none; margin-bottom: 1rem; }
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--gray-200);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--gray-500);
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
   </style>
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 </head>
 <body>
+
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">📊</div>
+      <div class="logo-text">
+        <h1>Scan360</h1>
+        <span>CR Technology</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" onclick="showManualEntry()">
+        ✏️ Inserimento Manuale
+      </button>
+      <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+        📁 Carica CR
+      </button>
+    </div>
+  </header>
+
   <div class="container">
-    <header class="app-header" aria-label="intestazione">
-      <div class="title"><span class="emoji">🗂️</span> Task Manager <span id="dataOggi" class="today"></span></div>
-      <div class="actions">
-        <button id="btnNuovo" class="btn primary" aria-label="Nuova attività">➕ Nuova</button>
-        <button id="btnEsporta" class="btn" aria-label="Esporta dati">⬇️ Esporta</button>
-        <button id="btnImporta" class="btn" aria-label="Importa dati">⬆️ Importa</button>
-        <input id="fileImport" type="file" accept="application/json" style="display:none" />
+    <!-- Upload Zone -->
+    <div class="upload-zone" id="uploadZone">
+      <div class="upload-icon">📄</div>
+      <h2>Carica il Certificato di Centrale Rischi</h2>
+      <p>Trascina il file qui oppure clicca per selezionarlo</p>
+      <div class="upload-formats">
+        <span class="format-badge">PDF</span>
+        <span class="format-badge">PNG</span>
+        <span class="format-badge">JPG</span>
+        <span class="format-badge">TIFF</span>
       </div>
-    </header>
+      <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.tiff,.tif" />
+    </div>
 
-    <!-- Stats quick -->
-    <section class="stats" aria-label="metriche">
-      <div class="stat"><div class="label">In corso</div><div class="value" id="mInCorso">0</div></div>
-      <div class="stat"><div class="label">Critiche</div><div class="value" id="mCritiche">0</div></div>
-      <div class="stat"><div class="label">Scadute</div><div class="value" id="mScadute">0</div></div>
-      <div class="stat"><div class="label">Completate (30g)</div><div class="value" id="mCompletateMese">0</div></div>
-    </section>
+    <!-- Progress -->
+    <div class="progress-container" id="progressContainer">
+      <div class="spinner"></div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-text" id="progressText">Analisi in corso...</div>
+    </div>
 
-    <!-- Tabs -->
-    <nav class="tabs" role="tablist" aria-label="navigazione principali">
-      <button class="tab active" data-tab="tutte" role="tab">🔋 Tutte</button>
-      <button class="tab" data-tab="critiche" role="tab">🚨 Critiche</button>
-      <button class="tab" data-tab="completate" role="tab">✅ Completate</button>
-      <button class="tab" data-tab="statistiche" role="tab">📊 Statistiche</button>
-      <button class="tab" data-tab="impostazioni" role="tab">⚙️ Impostazioni</button>
-    </nav>
-
-    <!-- Toolbar: filters + actions -->
-    <section class="toolbar" aria-label="strumenti">
-      <div class="filters">
-        <div class="group">
-          <label for="q">🔎 Ricerca</label>
-          <input id="q" type="text" placeholder="Titolo o note…" aria-label="Ricerca" />
+    <!-- Manual Entry Form -->
+    <div class="manual-form" id="manualForm">
+      <div class="panel">
+        <div class="panel-header">
+          <h3>✏️ Inserimento Manuale Dati CR</h3>
+          <button class="btn btn-secondary" onclick="hideManualEntry()">✖ Chiudi</button>
         </div>
-        <div class="group">
-          <label for="fPrio">⏫ Priorità</label>
-          <select id="fPrio" aria-label="Filtro priorità">
-            <option value="all">Tutte</option>
-            <option value="critica">Critica</option>
-            <option value="alta">Alta</option>
-            <option value="media">Media</option>
-            <option value="bassa">Bassa</option>
-          </select>
-        </div>
-        <div class="group">
-          <label for="fDue">📅 Scadenza</label>
-          <select id="fDue" aria-label="Filtro scadenza">
-            <option value="all">Tutte</option>
-            <option value="overdue">Scadute</option>
-            <option value="today">Oggi</option>
-            <option value="next7">Prossimi 7 giorni</option>
-            <option value="nodue">Senza scadenza</option>
-          </select>
+        <div class="panel-body">
+          <div class="alert alert-info">
+            <span class="alert-icon">ℹ️</span>
+            <div>Inserisci i dati estratti dal certificato di Centrale Rischi. Tutti gli importi sono in Euro.</div>
+          </div>
+
+          <form id="crForm" onsubmit="processManualData(event)">
+            <h4 style="margin: 1.5rem 0 1rem; color: var(--gray-700);">📋 Dati Anagrafici</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Denominazione / Nome</label>
+                <input type="text" id="denominazione" placeholder="Es: Mario Rossi S.r.l." required />
+              </div>
+              <div class="form-group">
+                <label>Codice Fiscale / P.IVA</label>
+                <input type="text" id="codiceFiscale" placeholder="Es: 01234567890" />
+              </div>
+              <div class="form-group">
+                <label>Data Riferimento</label>
+                <input type="date" id="dataRiferimento" />
+              </div>
+              <div class="form-group">
+                <label>Numero Intermediari</label>
+                <input type="number" id="numIntermediari" min="0" value="0" />
+              </div>
+            </div>
+
+            <h4 style="margin: 1.5rem 0 1rem; color: var(--gray-700);">💰 Crediti per Cassa</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Rischi Autoliquidanti - Accordato</label>
+                <input type="number" id="autoliqAccordato" min="0" step="0.01" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Rischi Autoliquidanti - Utilizzato</label>
+                <input type="number" id="autoliqUtilizzato" min="0" step="0.01" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Rischi a Scadenza - Accordato</label>
+                <input type="number" id="scadenzaAccordato" min="0" step="0.01" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Rischi a Scadenza - Utilizzato</label>
+                <input type="number" id="scadenzaUtilizzato" min="0" step="0.01" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Rischi a Revoca - Accordato</label>
+                <input type="number" id="revocaAccordato" min="0" step="0.01" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Rischi a Revoca - Utilizzato</label>
+                <input type="number" id="revocaUtilizzato" min="0" step="0.01" value="0" />
+              </div>
+            </div>
+
+            <h4 style="margin: 1.5rem 0 1rem; color: var(--gray-700);">✍️ Crediti di Firma</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Garanzie Connesse - Accordato</label>
+                <input type="number" id="garanzieAccordato" min="0" step="0.01" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Garanzie Connesse - Utilizzato</label>
+                <input type="number" id="garanzieUtilizzato" min="0" step="0.01" value="0" />
+              </div>
+            </div>
+
+            <h4 style="margin: 1.5rem 0 1rem; color: var(--gray-700);">⚠️ Anomalie</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Sconfinamenti</label>
+                <input type="number" id="sconfinamenti" min="0" step="0.01" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Sofferenze</label>
+                <input type="number" id="sofferenze" min="0" step="0.01" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Inadempienze Probabili</label>
+                <input type="number" id="inadempienze" min="0" step="0.01" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Passaggi a Perdita</label>
+                <input type="number" id="passaggiPerdita" min="0" step="0.01" value="0" />
+              </div>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+              <button type="button" class="btn btn-secondary" onclick="hideManualEntry()">Annulla</button>
+              <button type="submit" class="btn btn-success">📊 Analizza Dati</button>
+            </div>
+          </form>
         </div>
       </div>
-      <div class="actions">
-        <button id="btnPulisciFiltri" class="btn ghost">🧹 Pulisci filtri</button>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results" id="results">
+
+      <!-- Summary Cards -->
+      <div class="summary-grid" id="summaryCards">
+        <div class="summary-card total">
+          <div class="label">Totale Accordato</div>
+          <div class="value" id="totalAccordato">€ 0</div>
+          <div class="trend neutral" id="trendAccordato">—</div>
+        </div>
+        <div class="summary-card utilizzato">
+          <div class="label">Totale Utilizzato</div>
+          <div class="value" id="totalUtilizzato">€ 0</div>
+          <div class="trend" id="trendUtilizzato">—</div>
+        </div>
+        <div class="summary-card disponibile">
+          <div class="label">Margine Disponibile</div>
+          <div class="value" id="totalDisponibile">€ 0</div>
+          <div class="trend" id="trendDisponibile">—</div>
+        </div>
+        <div class="summary-card sofferenze">
+          <div class="label">Sofferenze</div>
+          <div class="value" id="totalSofferenze">€ 0</div>
+          <div class="trend" id="trendSofferenze">—</div>
+        </div>
+        <div class="summary-card sconfinamenti">
+          <div class="label">Sconfinamenti</div>
+          <div class="value" id="totalSconfinamenti">€ 0</div>
+          <div class="trend" id="trendSconfinamenti">—</div>
+        </div>
+        <div class="summary-card garanzie">
+          <div class="label">Garanzie Prestate</div>
+          <div class="value" id="totalGaranzie">€ 0</div>
+          <div class="trend neutral">Crediti di firma</div>
+        </div>
       </div>
-    </section>
 
-    <!-- Content -->
-    <main id="content" aria-live="polite"></main>
+      <!-- Alerts -->
+      <div id="alertsContainer"></div>
 
-    <footer>Standalone HTML – nessuna build. Nota: PWA/Service Worker non inclusi in singolo file.</footer>
-  </div>
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="overview">📊 Panoramica</button>
+        <button class="tab" data-tab="dettaglio">📋 Dettaglio Linee</button>
+        <button class="tab" data-tab="storico">📈 Analisi Storica</button>
+        <button class="tab" data-tab="score">🎯 Credit Score</button>
+        <button class="tab" data-tab="report">📄 Report</button>
+      </div>
 
-  <!-- MODAL: Task Form -->
-  <div id="modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal" role="document">
-      <header>
-        <div id="modalTitle" class="title" style="font-size:1.1rem">✏️ Nuova attività</div>
-        <button id="modalClose" class="btn">✖</button>
-      </header>
-      <div class="content">
-        <form id="taskForm" autocomplete="off">
-          <input type="hidden" id="taskId" />
-          <div class="form-grid">
-            <div class="field full">
-              <label for="title">Titolo <span style="color:var(--danger)">*</span></label>
-              <input id="title" required placeholder="Esempio: Preparare presentazione" />
+      <!-- Overview Panel -->
+      <div class="panel active" id="panel-overview">
+        <div class="panel-header">
+          <h3>📊 Panoramica Esposizione</h3>
+          <span id="dataRiferimentoLabel">Data: --</span>
+        </div>
+        <div class="panel-body">
+          <div class="info-grid" id="infoGrid">
+            <div>
+              <div class="info-item">
+                <span class="info-label">Denominazione</span>
+                <span class="info-value" id="infoDenominazione">—</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Codice Fiscale</span>
+                <span class="info-value" id="infoCF">—</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">N° Intermediari Segnalanti</span>
+                <span class="info-value" id="infoIntermediari">—</span>
+              </div>
             </div>
-            <div class="field">
-              <label for="project">Progetto</label>
-              <select id="project"></select>
-            </div>
-            <div class="field">
-              <label for="assignee">Assegnatario</label>
-              <select id="assignee"></select>
-            </div>
-            <div class="field">
-              <label for="priority">Priorità</label>
-              <select id="priority">
-                <option value="bassa">Bassa</option>
-                <option value="media">Media</option>
-                <option value="alta">Alta</option>
-                <option value="critica">Critica</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="progress">Progresso (%)</label>
-              <input id="progress" type="number" min="0" max="100" step="1" value="0" />
-              <div class="help">0–100</div>
-            </div>
-            <div class="field">
-              <label for="dueDate">Scadenza</label>
-              <input id="dueDate" type="date" />
-            </div>
-            <div class="field full">
-              <label for="notes">Note</label>
-              <textarea id="notes" rows="3" placeholder="Dettagli, link, checklist…"></textarea>
+            <div>
+              <div class="info-item">
+                <span class="info-label">Tasso Utilizzo</span>
+                <span class="info-value" id="infoUtilizzo">—</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Incidenza Sofferenze</span>
+                <span class="info-value" id="infoSofferenze">—</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Incidenza Sconfinamenti</span>
+                <span class="info-value" id="infoSconfinamenti">—</span>
+              </div>
             </div>
           </div>
-          <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:14px;">
-            <button type="button" class="btn" id="btnAnnulla">Annulla</button>
-            <button type="submit" class="btn primary" id="btnSalva">Salva</button>
+
+          <div class="charts-grid">
+            <div class="chart-card">
+              <h4>Composizione Accordato vs Utilizzato</h4>
+              <div class="chart-container">
+                <canvas id="chartAccordato"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <h4>Distribuzione per Tipologia</h4>
+              <div class="chart-container">
+                <canvas id="chartTipologia"></canvas>
+              </div>
+            </div>
           </div>
-        </form>
+        </div>
       </div>
+
+      <!-- Dettaglio Panel -->
+      <div class="panel" id="panel-dettaglio">
+        <div class="panel-header">
+          <h3>📋 Dettaglio Linee di Credito</h3>
+          <button class="btn btn-secondary" onclick="exportTable()">⬇️ Esporta CSV</button>
+        </div>
+        <div class="panel-body">
+          <div class="table-container">
+            <table id="lineeTable">
+              <thead>
+                <tr>
+                  <th>Tipologia</th>
+                  <th>Accordato</th>
+                  <th>Utilizzato</th>
+                  <th>Disponibile</th>
+                  <th>% Utilizzo</th>
+                  <th>Stato</th>
+                </tr>
+              </thead>
+              <tbody id="lineeTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Storico Panel -->
+      <div class="panel" id="panel-storico">
+        <div class="panel-header">
+          <h3>📈 Analisi Storica</h3>
+        </div>
+        <div class="panel-body">
+          <div class="alert alert-info">
+            <span class="alert-icon">ℹ️</span>
+            <div>Carica più certificati CR di periodi diversi per visualizzare l'andamento storico dell'esposizione.</div>
+          </div>
+          <div class="chart-card">
+            <h4>Trend Esposizione nel Tempo</h4>
+            <div class="chart-container" style="height: 300px;">
+              <canvas id="chartStorico"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Score Panel -->
+      <div class="panel" id="panel-score">
+        <div class="panel-header">
+          <h3>🎯 Analisi Credit Score</h3>
+        </div>
+        <div class="panel-body">
+          <div class="score-container">
+            <div class="score-circle" id="scoreCircle" style="--score: 0; --score-color: #6c757d;">
+              <div class="score-value" id="scoreValue">--</div>
+              <div class="score-label">su 100</div>
+            </div>
+            <div class="score-description" id="scoreDescription">Carica un certificato CR per calcolare lo score</div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="chart-card">
+              <h4>Fattori di Rischio</h4>
+              <div class="chart-container">
+                <canvas id="chartRischio"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <h4>Breakdown Score</h4>
+              <div id="scoreBreakdown" style="padding: 1rem;">
+                <div class="info-item">
+                  <span class="info-label">Tasso Utilizzo Fidi</span>
+                  <span class="info-value" id="scoreUtilizzo">—</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Assenza Sofferenze</span>
+                  <span class="info-value" id="scoreSofferenze">—</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Assenza Sconfinamenti</span>
+                  <span class="info-value" id="scoreSconfinamenti">—</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Diversificazione</span>
+                  <span class="info-value" id="scoreDiversificazione">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Report Panel -->
+      <div class="panel" id="panel-report">
+        <div class="panel-header">
+          <h3>📄 Report Completo</h3>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary" onclick="printReport()">🖨️ Stampa</button>
+            <button class="btn btn-success" onclick="downloadReport()">⬇️ Scarica PDF</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div id="reportContent">
+            <!-- Report content will be generated here -->
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
   <script>
-  // ==============================
-  //  DATA MODEL & DEFAULT SETUP
-  // ==============================
-  const defaultProjects = [
-    "Progetti ordinari",
-    "Progetti strategici",
-    "Piani industriali",
-    "Collaboratori",
-    "Finanza",
-    "Hub",
-    "Formazione",
-    "Marketing"
-  ];
+    // ==========================================
+    // SCAN360 - CR ANALYSIS ENGINE
+    // ==========================================
 
-  const defaultPeoples = [
-    "Roberto",
-    "Roberto & Carlo",
-    "Roberto & Carlo & Nicola",
-    "Carlo",
-    "Nicola",
-    "Team",
-    "Consulente esterno"
-  ];
+    // State
+    let crData = null;
+    let charts = {};
+    let historicalData = [];
 
-  const STORAGE_KEY = 'tm_standalone_v1';
-  const SAVE_DEBOUNCE_MS = 300;
+    // DOM Elements
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const results = document.getElementById('results');
+    const manualForm = document.getElementById('manualForm');
 
-  /** @typedef {Object} Task */
-  /** @type {{
-   *  tasks: Task[],
-   *  completedTasks: Task[],
-   *  projects: string[],
-   *  people: string[],
-   *  tab: 'tutte'|'critiche'|'completate'|'statistiche'|'impostazioni',
-   *  filters: { priority: 'all'|'bassa'|'media'|'alta'|'critica', due: 'all'|'overdue'|'today'|'next7'|'nodue' },
-   *  q: string
-   * }} */
-  const state = {
-    tasks: [],
-    completedTasks: [],
-    projects: [...defaultProjects],
-    people: [...defaultPeoples],
-    tab: 'tutte',
-    filters: { priority: 'all', due: 'all' },
-    q: ''
-  };
+    // Initialize PDF.js
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
 
-  let saveTimer = null;
+    // ==========================================
+    // FILE UPLOAD & DRAG-DROP
+    // ==========================================
 
-  function save() {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      const payload = { tasks: state.tasks, completedTasks: state.completedTasks, projects: state.projects, people: state.people };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-    }, SAVE_DEBOUNCE_MS);
-  }
+    uploadZone.addEventListener('click', () => fileInput.click());
 
-  function load() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) processFile(file);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) processFile(file);
+    });
+
+    // ==========================================
+    // FILE PROCESSING
+    // ==========================================
+
+    async function processFile(file) {
+      showProgress();
+      updateProgress(10, 'Lettura file...');
+
       try {
-        const data = JSON.parse(raw);
-        state.tasks = Array.isArray(data.tasks) ? data.tasks : [];
-        state.completedTasks = Array.isArray(data.completedTasks) ? data.completedTasks : [];
-        state.projects = Array.isArray(data.projects) && data.projects.length ? data.projects : [...defaultProjects];
-        state.people = Array.isArray(data.people) && data.people.length ? data.people : [...defaultPeoples];
-      } catch (e) {
-        console.warn('Dati corrotti, avvio con default.');
+        let text = '';
+
+        if (file.type === 'application/pdf') {
+          text = await extractTextFromPDF(file);
+        } else if (file.type.startsWith('image/')) {
+          text = await extractTextFromImage(file);
+        } else {
+          throw new Error('Formato file non supportato');
+        }
+
+        updateProgress(70, 'Analisi dati CR...');
+        crData = parsecrData(text);
+
+        updateProgress(90, 'Generazione report...');
+        await new Promise(r => setTimeout(r, 500));
+
+        updateProgress(100, 'Completato!');
+        await new Promise(r => setTimeout(r, 300));
+
+        hideProgress();
+        displayResults();
+
+      } catch (error) {
+        console.error('Errore elaborazione:', error);
+        hideProgress();
+        alert('Errore durante l\'elaborazione del file. Prova con l\'inserimento manuale dei dati.');
       }
     }
-  }
 
-  // ==============================
-  //  UTILITIES
-  // ==============================
-  const fmtDate = (d) => new Intl.DateTimeFormat('it-IT', { dateStyle: 'medium' }).format(d);
-  const todayISO = () => new Date().toISOString().slice(0,10);
-  const parseISO = (s) => s ? new Date(s + 'T00:00:00') : null;
+    async function extractTextFromPDF(file) {
+      updateProgress(20, 'Caricamento PDF...');
 
-  function isOverdue(dueISO) {
-    if (!dueISO) return false;
-    const due = parseISO(dueISO);
-    const today = new Date(); today.setHours(0,0,0,0);
-    return due && due < today;
-  }
-  function isDueToday(dueISO) {
-    if (!dueISO) return false;
-    return dueISO === todayISO();
-  }
-  function isDueSoon(dueISO, days) {
-    if (!dueISO) return false;
-    const due = parseISO(dueISO);
-    const today = new Date(); today.setHours(0,0,0,0);
-    const soon = new Date(today); soon.setDate(soon.getDate() + days);
-    return due >= today && due <= soon;
-  }
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
-  function genId() { return Date.now() + Math.floor(Math.random()*100000); }
+      let fullText = '';
+      const totalPages = pdf.numPages;
 
-  const PRIORITY_ORDER = { critica: 0, alta: 1, media: 2, bassa: 3 };
-  function sortTasks(a, b) {
-    const pa = PRIORITY_ORDER[a.priority] ?? 3;
-    const pb = PRIORITY_ORDER[b.priority] ?? 3;
-    if (pa !== pb) return pa - pb;
-    // by due date (nulls last)
-    if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
-    if (a.dueDate && !b.dueDate) return -1;
-    if (!a.dueDate && b.dueDate) return 1;
-    return a.title.localeCompare(b.title, 'it');
-  }
+      for (let i = 1; i <= totalPages; i++) {
+        updateProgress(20 + (40 * i / totalPages), `Lettura pagina ${i}/${totalPages}...`);
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(' ');
+        fullText += pageText + '\n';
+      }
 
-  function applyFilters(list) {
-    let res = [...list];
-    const { priority, due } = state.filters;
-    const q = state.q.trim().toLowerCase();
-
-    if (priority !== 'all') {
-      res = res.filter(t => t.priority === priority);
+      return fullText;
     }
-    if (due !== 'all') {
-      if (due === 'overdue') res = res.filter(t => isOverdue(t.dueDate));
-      if (due === 'today') res = res.filter(t => isDueToday(t.dueDate));
-      if (due === 'next7') res = res.filter(t => isDueSoon(t.dueDate, 7));
-      if (due === 'nodue') res = res.filter(t => !t.dueDate);
+
+    async function extractTextFromImage(file) {
+      updateProgress(20, 'Inizializzazione OCR...');
+
+      const worker = await Tesseract.createWorker('ita');
+
+      updateProgress(40, 'Riconoscimento testo...');
+      const { data } = await worker.recognize(file);
+
+      await worker.terminate();
+      return data.text;
     }
-    if (q) {
-      res = res.filter(t => (t.title + ' ' + (t.notes||'')).toLowerCase().includes(q));
+
+    // ==========================================
+    // CR DATA PARSING
+    // ==========================================
+
+    function parsecrData(text) {
+      // Normalize text
+      const normalizedText = text.toLowerCase().replace(/\s+/g, ' ');
+
+      // Extract data using patterns
+      const data = {
+        denominazione: extractPattern(text, /(?:denominazione|ragione sociale|intestatario)[:\s]*([^\n]+)/i) || 'Non rilevato',
+        codiceFiscale: extractPattern(text, /(?:codice fiscale|c\.f\.|cf|p\.iva)[:\s]*(\d{11}|\w{16})/i) || 'Non rilevato',
+        dataRiferimento: extractDate(text) || new Date().toISOString().slice(0, 10),
+        numIntermediari: extractNumber(text, /(?:numero intermediari|n\.\s*intermediari|intermediari segnalanti)[:\s]*(\d+)/i) || 1,
+
+        // Crediti per cassa
+        autoliquidanti: {
+          accordato: extractAmount(text, /autoliquidant[ie].*?accordato[:\s]*([\d.,]+)/i) || 0,
+          utilizzato: extractAmount(text, /autoliquidant[ie].*?utilizzato[:\s]*([\d.,]+)/i) || 0
+        },
+        scadenza: {
+          accordato: extractAmount(text, /(?:a scadenza|scadenza).*?accordato[:\s]*([\d.,]+)/i) || 0,
+          utilizzato: extractAmount(text, /(?:a scadenza|scadenza).*?utilizzato[:\s]*([\d.,]+)/i) || 0
+        },
+        revoca: {
+          accordato: extractAmount(text, /(?:a revoca|revoca).*?accordato[:\s]*([\d.,]+)/i) || 0,
+          utilizzato: extractAmount(text, /(?:a revoca|revoca).*?utilizzato[:\s]*([\d.,]+)/i) || 0
+        },
+
+        // Crediti di firma
+        garanzie: {
+          accordato: extractAmount(text, /garanzi[ae].*?accordato[:\s]*([\d.,]+)/i) || 0,
+          utilizzato: extractAmount(text, /garanzi[ae].*?utilizzato[:\s]*([\d.,]+)/i) || 0
+        },
+
+        // Anomalie
+        sconfinamenti: extractAmount(text, /sconfinament[io][:\s]*([\d.,]+)/i) || 0,
+        sofferenze: extractAmount(text, /sofferenz[ae][:\s]*([\d.,]+)/i) || 0,
+        inadempienze: extractAmount(text, /inadempienz[ae][:\s]*([\d.,]+)/i) || 0,
+        passaggiPerdita: extractAmount(text, /passaggi.*?perdita[:\s]*([\d.,]+)/i) || 0,
+
+        rawText: text
+      };
+
+      // Calculate totals
+      data.totaleAccordato = data.autoliquidanti.accordato + data.scadenza.accordato +
+                             data.revoca.accordato + data.garanzie.accordato;
+      data.totaleUtilizzato = data.autoliquidanti.utilizzato + data.scadenza.utilizzato +
+                              data.revoca.utilizzato + data.garanzie.utilizzato;
+      data.totaleDisponibile = data.totaleAccordato - data.totaleUtilizzato;
+
+      return data;
     }
-    return res.sort(sortTasks);
-  }
 
-  // ==============================
-  //  RENDERING
-  // ==============================
-  const $ = (sel, root=document) => root.querySelector(sel);
-  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-
-  function setToday() {
-    $('#dataOggi').textContent = '· ' + fmtDate(new Date());
-  }
-
-  function render() {
-    // header metrics
-    const inCorso = state.tasks.length;
-    const critiche = state.tasks.filter(t => t.priority === 'critica').length;
-    const scadute = state.tasks.filter(t => isOverdue(t.dueDate)).length;
-    const now = new Date(); const past30 = new Date(); past30.setDate(now.getDate()-30);
-    const completateMese = state.completedTasks.filter(t => t.completedDate && new Date(t.completedDate) >= past30).length;
-
-    $('#mInCorso').textContent = inCorso;
-    $('#mCritiche').textContent = critiche;
-    $('#mScadute').textContent = scadute;
-    $('#mCompletateMese').textContent = completateMese;
-
-    // tabs active
-    $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === state.tab));
-
-    // content by tab
-    const mount = $('#content');
-    mount.innerHTML = '';
-    if (state.tab === 'tutte' || state.tab === 'critiche') {
-      const list = state.tab === 'critiche' ? state.tasks.filter(t => t.priority==='critica') : state.tasks;
-      renderTaskList(mount, applyFilters(list));
-    } else if (state.tab === 'completate') {
-      renderCompleted(mount);
-    } else if (state.tab === 'statistiche') {
-      renderStats(mount);
-    } else if (state.tab === 'impostazioni') {
-      renderSettings(mount);
+    function extractPattern(text, pattern) {
+      const match = text.match(pattern);
+      return match ? match[1].trim() : null;
     }
-  }
 
-  function pill(text) { const s=document.createElement('span'); s.className='pill'; s.textContent=text; return s; }
-
-  function renderTaskList(root, list) {
-    if (!list.length) {
-      const empty = document.createElement('div');
-      empty.className = 'empty';
-      empty.textContent = 'Nessuna attività. Aggiungi la prima con “Nuova”.';
-      root.appendChild(empty);
-      return;
+    function extractNumber(text, pattern) {
+      const match = text.match(pattern);
+      return match ? parseInt(match[1]) : null;
     }
-    const grid = document.createElement('div');
-    grid.className = 'task-grid';
-    list.forEach(task => grid.appendChild(taskCard(task)));
-    root.appendChild(grid);
-  }
 
-  function taskCard(task) {
-    const card = document.createElement('div');
-    card.className = 'task-card';
-
-    const header = document.createElement('header');
-    const prio = document.createElement('span');
-    prio.className = `priority-badge prio-${task.priority}`;
-    prio.textContent = task.priority.toUpperCase();
-
-    const actions = document.createElement('div');
-    actions.className = 'actions';
-    const bEdit = btn('✏️', () => openModal(task));
-    bEdit.title = 'Modifica';
-    const bDel = btn('🗑️', () => onDelete(task.id), 'danger'); bDel.title = 'Elimina';
-    actions.append(bEdit, bDel);
-
-    header.append(prio, actions);
-
-    const h3 = document.createElement('h3'); h3.textContent = task.title;
-
-    const meta = document.createElement('div'); meta.className = 'meta';
-    meta.innerHTML = `👤 ${task.assignee || '—'} · 📂 ${task.project || '—'} · 📅 ${task.dueDate ? fmtDate(parseISO(task.dueDate)) : '—'}`;
-
-    const notes = document.createElement('div'); notes.className='notes'; if (task.notes) notes.textContent = task.notes; else notes.style.display='none';
-
-    const progress = document.createElement('div'); progress.className='progress';
-    const fill = document.createElement('div'); fill.className='fill'; fill.style.width = (task.progress||0) + '%'; progress.appendChild(fill);
-
-    const controls = document.createElement('div'); controls.className='controls';
-    const bPlus = btn('+10%', () => onUpdateProgress(task.id, +10));
-    const bMinus = btn('-10%', () => onUpdateProgress(task.id, -10));
-    const bComplete = btn('✅ Completa', () => onComplete(task.id), 'success');
-    controls.append(bPlus, bMinus, bComplete);
-
-    card.append(header, h3, meta, notes, progress, controls);
-    return card;
-  }
-
-  function renderCompleted(root) {
-    if (!state.completedTasks.length) {
-      const empty = document.createElement('div'); empty.className='empty'; empty.textContent='Nessuna attività completata.'; root.appendChild(empty); return;
+    function extractAmount(text, pattern) {
+      const match = text.match(pattern);
+      if (!match) return 0;
+      // Handle Italian number format (1.234,56 or 1234,56)
+      let numStr = match[1].replace(/\./g, '').replace(',', '.');
+      return parseFloat(numStr) || 0;
     }
-    const list = document.createElement('div'); list.className='completed-list';
-    state.completedTasks
-      .slice()
-      .sort((a,b) => (b.completedDate||'').localeCompare(a.completedDate||''))
-      .forEach(t => {
-        const item = document.createElement('div'); item.className='completed-item';
-        const info = document.createElement('div'); info.className='info';
-        const dt = t.completedDate ? fmtDate(new Date(t.completedDate)) : '—';
-        info.textContent = `✅ ${t.title} · ${t.assignee||'—'} · ${t.project||'—'} · Completata: ${dt}`;
-        const act = document.createElement('div');
-        const bRestore = btn('↩️ Ripristina', () => onRestore(t.id));
-        act.appendChild(bRestore);
-        item.append(info, act); list.appendChild(item);
+
+    function extractDate(text) {
+      const patterns = [
+        /data[:\s]*(\d{2}[\/\-]\d{2}[\/\-]\d{4})/i,
+        /riferimento[:\s]*(\d{2}[\/\-]\d{2}[\/\-]\d{4})/i,
+        /(\d{2}[\/\-]\d{2}[\/\-]\d{4})/
+      ];
+
+      for (const pattern of patterns) {
+        const match = text.match(pattern);
+        if (match) {
+          const parts = match[1].split(/[\/\-]/);
+          return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+      }
+      return null;
+    }
+
+    // ==========================================
+    // MANUAL DATA ENTRY
+    // ==========================================
+
+    function showManualEntry() {
+      manualForm.classList.add('active');
+      uploadZone.style.display = 'none';
+    }
+
+    function hideManualEntry() {
+      manualForm.classList.remove('active');
+      uploadZone.style.display = 'block';
+    }
+
+    function processManualData(event) {
+      event.preventDefault();
+
+      crData = {
+        denominazione: document.getElementById('denominazione').value || 'Non specificato',
+        codiceFiscale: document.getElementById('codiceFiscale').value || 'Non specificato',
+        dataRiferimento: document.getElementById('dataRiferimento').value || new Date().toISOString().slice(0, 10),
+        numIntermediari: parseInt(document.getElementById('numIntermediari').value) || 1,
+
+        autoliquidanti: {
+          accordato: parseFloat(document.getElementById('autoliqAccordato').value) || 0,
+          utilizzato: parseFloat(document.getElementById('autoliqUtilizzato').value) || 0
+        },
+        scadenza: {
+          accordato: parseFloat(document.getElementById('scadenzaAccordato').value) || 0,
+          utilizzato: parseFloat(document.getElementById('scadenzaUtilizzato').value) || 0
+        },
+        revoca: {
+          accordato: parseFloat(document.getElementById('revocaAccordato').value) || 0,
+          utilizzato: parseFloat(document.getElementById('revocaUtilizzato').value) || 0
+        },
+        garanzie: {
+          accordato: parseFloat(document.getElementById('garanzieAccordato').value) || 0,
+          utilizzato: parseFloat(document.getElementById('garanzieUtilizzato').value) || 0
+        },
+
+        sconfinamenti: parseFloat(document.getElementById('sconfinamenti').value) || 0,
+        sofferenze: parseFloat(document.getElementById('sofferenze').value) || 0,
+        inadempienze: parseFloat(document.getElementById('inadempienze').value) || 0,
+        passaggiPerdita: parseFloat(document.getElementById('passaggiPerdita').value) || 0
+      };
+
+      // Calculate totals
+      crData.totaleAccordato = crData.autoliquidanti.accordato + crData.scadenza.accordato +
+                               crData.revoca.accordato + crData.garanzie.accordato;
+      crData.totaleUtilizzato = crData.autoliquidanti.utilizzato + crData.scadenza.utilizzato +
+                                crData.revoca.utilizzato + crData.garanzie.utilizzato;
+      crData.totaleDisponibile = crData.totaleAccordato - crData.totaleUtilizzato;
+
+      hideManualEntry();
+      displayResults();
+    }
+
+    // ==========================================
+    // DISPLAY RESULTS
+    // ==========================================
+
+    function displayResults() {
+      results.classList.add('active');
+      uploadZone.style.display = 'none';
+
+      updateSummaryCards();
+      updateAlerts();
+      updateInfoGrid();
+      updateLineeTable();
+      updateCharts();
+      calculateScore();
+      generateReport();
+    }
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('it-IT', {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 0
+      }).format(amount);
+    }
+
+    function formatPercent(value) {
+      return new Intl.NumberFormat('it-IT', {
+        style: 'percent',
+        maximumFractionDigits: 1
+      }).format(value);
+    }
+
+    function updateSummaryCards() {
+      document.getElementById('totalAccordato').textContent = formatCurrency(crData.totaleAccordato);
+      document.getElementById('totalUtilizzato').textContent = formatCurrency(crData.totaleUtilizzato);
+      document.getElementById('totalDisponibile').textContent = formatCurrency(crData.totaleDisponibile);
+      document.getElementById('totalSofferenze').textContent = formatCurrency(crData.sofferenze);
+      document.getElementById('totalSconfinamenti').textContent = formatCurrency(crData.sconfinamenti);
+      document.getElementById('totalGaranzie').textContent = formatCurrency(crData.garanzie.utilizzato);
+
+      // Update trends
+      const utilizzoRate = crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0;
+      const trendUtilizzato = document.getElementById('trendUtilizzato');
+      trendUtilizzato.textContent = `${formatPercent(utilizzoRate)} del fido`;
+      trendUtilizzato.className = 'trend ' + (utilizzoRate > 0.8 ? 'negative' : utilizzoRate > 0.5 ? 'neutral' : 'positive');
+
+      const trendDisponibile = document.getElementById('trendDisponibile');
+      const disponibileRate = crData.totaleAccordato > 0 ? crData.totaleDisponibile / crData.totaleAccordato : 0;
+      trendDisponibile.textContent = `${formatPercent(disponibileRate)} disponibile`;
+      trendDisponibile.className = 'trend ' + (disponibileRate < 0.2 ? 'negative' : 'positive');
+
+      const trendSofferenze = document.getElementById('trendSofferenze');
+      if (crData.sofferenze > 0) {
+        const sofferenzeRate = crData.totaleUtilizzato > 0 ? crData.sofferenze / crData.totaleUtilizzato : 0;
+        trendSofferenze.textContent = `${formatPercent(sofferenzeRate)} del totale`;
+        trendSofferenze.className = 'trend negative';
+      } else {
+        trendSofferenze.textContent = 'Nessuna sofferenza';
+        trendSofferenze.className = 'trend positive';
+      }
+
+      const trendSconfinamenti = document.getElementById('trendSconfinamenti');
+      if (crData.sconfinamenti > 0) {
+        trendSconfinamenti.textContent = 'Presenza sconfinamenti';
+        trendSconfinamenti.className = 'trend negative';
+      } else {
+        trendSconfinamenti.textContent = 'Nessuno sconfinamento';
+        trendSconfinamenti.className = 'trend positive';
+      }
+    }
+
+    function updateAlerts() {
+      const container = document.getElementById('alertsContainer');
+      container.innerHTML = '';
+
+      // Check for issues
+      if (crData.sofferenze > 0) {
+        container.innerHTML += `
+          <div class="alert alert-danger">
+            <span class="alert-icon">🚨</span>
+            <div>
+              <strong>Sofferenze Rilevate:</strong> ${formatCurrency(crData.sofferenze)}<br>
+              La presenza di sofferenze compromette significativamente il merito creditizio.
+            </div>
+          </div>
+        `;
+      }
+
+      if (crData.sconfinamenti > 0) {
+        container.innerHTML += `
+          <div class="alert alert-warning">
+            <span class="alert-icon">⚠️</span>
+            <div>
+              <strong>Sconfinamenti Rilevati:</strong> ${formatCurrency(crData.sconfinamenti)}<br>
+              Gli sconfinamenti indicano un utilizzo oltre i limiti accordati.
+            </div>
+          </div>
+        `;
+      }
+
+      const utilizzoRate = crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0;
+      if (utilizzoRate > 0.85) {
+        container.innerHTML += `
+          <div class="alert alert-warning">
+            <span class="alert-icon">📊</span>
+            <div>
+              <strong>Alto Utilizzo Fidi:</strong> ${formatPercent(utilizzoRate)}<br>
+              Un utilizzo superiore all'85% può indicare tensione finanziaria.
+            </div>
+          </div>
+        `;
+      }
+
+      if (crData.sofferenze === 0 && crData.sconfinamenti === 0 && utilizzoRate < 0.7) {
+        container.innerHTML += `
+          <div class="alert alert-success">
+            <span class="alert-icon">✅</span>
+            <div>
+              <strong>Posizione Regolare:</strong> Nessuna anomalia rilevata.<br>
+              Il profilo creditizio risulta in ordine con margini di utilizzo adeguati.
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function updateInfoGrid() {
+      document.getElementById('dataRiferimentoLabel').textContent = `Data: ${formatDateIT(crData.dataRiferimento)}`;
+      document.getElementById('infoDenominazione').textContent = crData.denominazione;
+      document.getElementById('infoCF').textContent = crData.codiceFiscale;
+      document.getElementById('infoIntermediari').textContent = crData.numIntermediari;
+
+      const utilizzoRate = crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0;
+      document.getElementById('infoUtilizzo').textContent = formatPercent(utilizzoRate);
+
+      const sofferenzeRate = crData.totaleUtilizzato > 0 ? crData.sofferenze / crData.totaleUtilizzato : 0;
+      document.getElementById('infoSofferenze').textContent = formatPercent(sofferenzeRate);
+
+      const sconfinamentiRate = crData.totaleUtilizzato > 0 ? crData.sconfinamenti / crData.totaleUtilizzato : 0;
+      document.getElementById('infoSconfinamenti').textContent = formatPercent(sconfinamentiRate);
+    }
+
+    function formatDateIT(dateStr) {
+      if (!dateStr) return '—';
+      const date = new Date(dateStr);
+      return new Intl.DateTimeFormat('it-IT', { dateStyle: 'long' }).format(date);
+    }
+
+    function updateLineeTable() {
+      const tbody = document.getElementById('lineeTableBody');
+
+      const linee = [
+        { nome: 'Rischi Autoliquidanti', ...crData.autoliquidanti },
+        { nome: 'Rischi a Scadenza', ...crData.scadenza },
+        { nome: 'Rischi a Revoca', ...crData.revoca },
+        { nome: 'Garanzie / Crediti di Firma', ...crData.garanzie }
+      ];
+
+      tbody.innerHTML = linee.map(linea => {
+        const disponibile = linea.accordato - linea.utilizzato;
+        const utilizzo = linea.accordato > 0 ? linea.utilizzato / linea.accordato : 0;
+        let statusClass = 'status-regolare';
+        let statusText = 'Regolare';
+
+        if (utilizzo > 1) {
+          statusClass = 'status-sconfinato';
+          statusText = 'Sconfinato';
+        } else if (utilizzo > 0.9) {
+          statusClass = 'status-incaglio';
+          statusText = 'Critico';
+        }
+
+        return `
+          <tr>
+            <td><strong>${linea.nome}</strong></td>
+            <td class="amount">${formatCurrency(linea.accordato)}</td>
+            <td class="amount">${formatCurrency(linea.utilizzato)}</td>
+            <td class="amount ${disponibile < 0 ? 'negative' : 'positive'}">${formatCurrency(disponibile)}</td>
+            <td>${formatPercent(utilizzo)}</td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+          </tr>
+        `;
+      }).join('');
+
+      // Add totals row
+      tbody.innerHTML += `
+        <tr style="background: var(--gray-50); font-weight: 700;">
+          <td>TOTALE</td>
+          <td class="amount">${formatCurrency(crData.totaleAccordato)}</td>
+          <td class="amount">${formatCurrency(crData.totaleUtilizzato)}</td>
+          <td class="amount ${crData.totaleDisponibile < 0 ? 'negative' : 'positive'}">${formatCurrency(crData.totaleDisponibile)}</td>
+          <td>${formatPercent(crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0)}</td>
+          <td>—</td>
+        </tr>
+      `;
+
+      // Add anomalies if present
+      if (crData.sofferenze > 0 || crData.sconfinamenti > 0 || crData.inadempienze > 0) {
+        tbody.innerHTML += `
+          <tr><td colspan="6" style="background: var(--gray-100); font-weight: 600; color: var(--danger);">⚠️ Anomalie</td></tr>
+        `;
+
+        if (crData.sofferenze > 0) {
+          tbody.innerHTML += `
+            <tr>
+              <td>Sofferenze</td>
+              <td colspan="2" class="amount negative">${formatCurrency(crData.sofferenze)}</td>
+              <td colspan="3"><span class="status-badge status-sofferenza">Sofferenza</span></td>
+            </tr>
+          `;
+        }
+
+        if (crData.sconfinamenti > 0) {
+          tbody.innerHTML += `
+            <tr>
+              <td>Sconfinamenti</td>
+              <td colspan="2" class="amount negative">${formatCurrency(crData.sconfinamenti)}</td>
+              <td colspan="3"><span class="status-badge status-sconfinato">Sconfinamento</span></td>
+            </tr>
+          `;
+        }
+
+        if (crData.inadempienze > 0) {
+          tbody.innerHTML += `
+            <tr>
+              <td>Inadempienze Probabili</td>
+              <td colspan="2" class="amount negative">${formatCurrency(crData.inadempienze)}</td>
+              <td colspan="3"><span class="status-badge status-incaglio">Inadempienza</span></td>
+            </tr>
+          `;
+        }
+      }
+    }
+
+    // ==========================================
+    // CHARTS
+    // ==========================================
+
+    function updateCharts() {
+      // Destroy existing charts
+      Object.values(charts).forEach(chart => chart && chart.destroy());
+
+      // Chart 1: Accordato vs Utilizzato
+      const ctx1 = document.getElementById('chartAccordato').getContext('2d');
+      charts.accordato = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: ['Autoliquidanti', 'A Scadenza', 'A Revoca', 'Garanzie'],
+          datasets: [
+            {
+              label: 'Accordato',
+              data: [
+                crData.autoliquidanti.accordato,
+                crData.scadenza.accordato,
+                crData.revoca.accordato,
+                crData.garanzie.accordato
+              ],
+              backgroundColor: 'rgba(0, 102, 204, 0.7)',
+              borderColor: '#0066cc',
+              borderWidth: 1
+            },
+            {
+              label: 'Utilizzato',
+              data: [
+                crData.autoliquidanti.utilizzato,
+                crData.scadenza.utilizzato,
+                crData.revoca.utilizzato,
+                crData.garanzie.utilizzato
+              ],
+              backgroundColor: 'rgba(0, 168, 107, 0.7)',
+              borderColor: '#00a86b',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: value => formatCurrency(value)
+              }
+            }
+          }
+        }
       });
-    root.appendChild(list);
-  }
 
-  let charts = { donut:null, line:null, bar:null };
-  
-function renderStats(root) {
-    const wrap = document.createElement('div');
-    wrap.style.display='grid'; 
-    wrap.style.gap='16px';
+      // Chart 2: Distribution Pie
+      const ctx2 = document.getElementById('chartTipologia').getContext('2d');
+      charts.tipologia = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: ['Autoliquidanti', 'A Scadenza', 'A Revoca', 'Garanzie'],
+          datasets: [{
+            data: [
+              crData.autoliquidanti.utilizzato,
+              crData.scadenza.utilizzato,
+              crData.revoca.utilizzato,
+              crData.garanzie.utilizzato
+            ],
+            backgroundColor: [
+              '#0066cc',
+              '#00a86b',
+              '#ffc107',
+              '#9c27b0'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
 
-    // quick metrics
-    const total = state.tasks.length + state.completedTasks.length;
-    const opened = state.tasks.length;
-    const done = state.completedTasks.length;
-    const criticalOpen = state.tasks.filter(t=>t.priority==='critica').length;
+      // Chart 3: Risk Radar
+      const ctx3 = document.getElementById('chartRischio').getContext('2d');
+      const utilizzoRate = crData.totaleAccordato > 0 ? (crData.totaleUtilizzato / crData.totaleAccordato) * 100 : 0;
+      const sofferenzeRate = crData.totaleUtilizzato > 0 ? (crData.sofferenze / crData.totaleUtilizzato) * 100 : 0;
+      const sconfinamentiRate = crData.totaleUtilizzato > 0 ? (crData.sconfinamenti / crData.totaleUtilizzato) * 100 : 0;
 
-    wrap.innerHTML = `
-      <div class="stats">
-        <div class="stat"><div class="label">Totale</div><div class="value">${total}</div></div>
-        <div class="stat"><div class="label">In corso</div><div class="value">${opened}</div></div>
-        <div class="stat"><div class="label">Completate</div><div class="value">${done}</div></div>
-        <div class="stat"><div class="label">Critiche aperte</div><div class="value">${criticalOpen}</div></div>
-      </div>
+      charts.rischio = new Chart(ctx3, {
+        type: 'radar',
+        data: {
+          labels: ['Utilizzo Fidi', 'Sofferenze', 'Sconfinamenti', 'Concentrazione', 'Garanzie'],
+          datasets: [{
+            label: 'Profilo Rischio',
+            data: [
+              Math.min(utilizzoRate, 100),
+              Math.min(sofferenzeRate * 10, 100),
+              Math.min(sconfinamentiRate * 10, 100),
+              crData.numIntermediari > 3 ? 30 : 60,
+              crData.garanzie.utilizzato > 0 ? 40 : 20
+            ],
+            backgroundColor: 'rgba(220, 53, 69, 0.2)',
+            borderColor: '#dc3545',
+            borderWidth: 2,
+            pointBackgroundColor: '#dc3545'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              beginAtZero: true,
+              max: 100
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
 
-      <div class="charts-grid">
-        <div class="chart-box">
-          <h4>Stato complessivo</h4>
-          <div class="chart-container"><canvas id="chDonut" class="stats-canvas"></canvas></div>
-          <table class="stats-table" aria-label="Tabella stato complessivo">
-            <tr><th>In corso</th><td>${opened}</td></tr>
-            <tr><th>Completate</th><td>${done}</td></tr>
-            <tr><th>Totale</th><td>${total}</td></tr>
+      // Chart 4: Historical (placeholder)
+      const ctx4 = document.getElementById('chartStorico').getContext('2d');
+      charts.storico = new Chart(ctx4, {
+        type: 'line',
+        data: {
+          labels: [crData.dataRiferimento],
+          datasets: [
+            {
+              label: 'Accordato',
+              data: [crData.totaleAccordato],
+              borderColor: '#0066cc',
+              backgroundColor: 'rgba(0, 102, 204, 0.1)',
+              fill: true,
+              tension: 0.4
+            },
+            {
+              label: 'Utilizzato',
+              data: [crData.totaleUtilizzato],
+              borderColor: '#00a86b',
+              backgroundColor: 'rgba(0, 168, 107, 0.1)',
+              fill: true,
+              tension: 0.4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: value => formatCurrency(value)
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // ==========================================
+    // CREDIT SCORE CALCULATION
+    // ==========================================
+
+    function calculateScore() {
+      let score = 100;
+      let breakdown = {
+        utilizzo: 25,
+        sofferenze: 30,
+        sconfinamenti: 25,
+        diversificazione: 20
+      };
+
+      // Factor 1: Utilizzo fidi (max 25 points)
+      const utilizzoRate = crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0;
+      if (utilizzoRate > 0.95) breakdown.utilizzo = 0;
+      else if (utilizzoRate > 0.85) breakdown.utilizzo = 10;
+      else if (utilizzoRate > 0.70) breakdown.utilizzo = 18;
+      else breakdown.utilizzo = 25;
+
+      // Factor 2: Sofferenze (max 30 points)
+      if (crData.sofferenze > 0) {
+        const sofferenzeRate = crData.sofferenze / crData.totaleUtilizzato;
+        if (sofferenzeRate > 0.1) breakdown.sofferenze = 0;
+        else if (sofferenzeRate > 0.05) breakdown.sofferenze = 10;
+        else breakdown.sofferenze = 15;
+      } else {
+        breakdown.sofferenze = 30;
+      }
+
+      // Factor 3: Sconfinamenti (max 25 points)
+      if (crData.sconfinamenti > 0) {
+        const sconfinamentiRate = crData.sconfinamenti / crData.totaleUtilizzato;
+        if (sconfinamentiRate > 0.1) breakdown.sconfinamenti = 0;
+        else if (sconfinamentiRate > 0.05) breakdown.sconfinamenti = 10;
+        else breakdown.sconfinamenti = 15;
+      } else {
+        breakdown.sconfinamenti = 25;
+      }
+
+      // Factor 4: Diversificazione (max 20 points)
+      if (crData.numIntermediari >= 3) breakdown.diversificazione = 20;
+      else if (crData.numIntermediari === 2) breakdown.diversificazione = 15;
+      else breakdown.diversificazione = 10;
+
+      score = breakdown.utilizzo + breakdown.sofferenze + breakdown.sconfinamenti + breakdown.diversificazione;
+
+      // Update UI
+      const scoreCircle = document.getElementById('scoreCircle');
+      const scoreValue = document.getElementById('scoreValue');
+      const scoreDescription = document.getElementById('scoreDescription');
+
+      let scoreColor = '#dc3545';
+      let description = 'Critico';
+
+      if (score >= 80) {
+        scoreColor = '#00a86b';
+        description = 'Eccellente - Profilo creditizio ottimo';
+      } else if (score >= 60) {
+        scoreColor = '#17a2b8';
+        description = 'Buono - Profilo creditizio nella norma';
+      } else if (score >= 40) {
+        scoreColor = '#ffc107';
+        description = 'Attenzione - Alcune criticità presenti';
+      } else {
+        description = 'Critico - Significative problematiche creditizie';
+      }
+
+      scoreCircle.style.setProperty('--score', score);
+      scoreCircle.style.setProperty('--score-color', scoreColor);
+      scoreValue.textContent = score;
+      scoreValue.style.color = scoreColor;
+      scoreDescription.textContent = description;
+
+      // Update breakdown
+      document.getElementById('scoreUtilizzo').textContent = `${breakdown.utilizzo}/25`;
+      document.getElementById('scoreSofferenze').textContent = `${breakdown.sofferenze}/30`;
+      document.getElementById('scoreSconfinamenti').textContent = `${breakdown.sconfinamenti}/25`;
+      document.getElementById('scoreDiversificazione').textContent = `${breakdown.diversificazione}/20`;
+    }
+
+    // ==========================================
+    // REPORT GENERATION
+    // ==========================================
+
+    function generateReport() {
+      const reportContent = document.getElementById('reportContent');
+      const utilizzoRate = crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0;
+
+      reportContent.innerHTML = `
+        <div style="margin-bottom: 2rem;">
+          <h2 style="color: var(--primary); margin-bottom: 0.5rem;">Report Analisi Centrale Rischi</h2>
+          <p style="color: var(--gray-500);">Generato il ${new Date().toLocaleDateString('it-IT', { dateStyle: 'full' })}</p>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <h4 style="margin-bottom: 0.5rem;">📋 Dati Anagrafici</h4>
+          <table style="width: 100%;">
+            <tr><td style="width: 200px; color: var(--gray-500);">Denominazione</td><td><strong>${crData.denominazione}</strong></td></tr>
+            <tr><td style="color: var(--gray-500);">Codice Fiscale</td><td>${crData.codiceFiscale}</td></tr>
+            <tr><td style="color: var(--gray-500);">Data Riferimento CR</td><td>${formatDateIT(crData.dataRiferimento)}</td></tr>
+            <tr><td style="color: var(--gray-500);">N° Intermediari</td><td>${crData.numIntermediari}</td></tr>
           </table>
         </div>
 
-        <div class="chart-box">
-          <h4>Distribuzione priorità (aperte)</h4>
-          <div class="chart-container"><canvas id="chBar" class="stats-canvas"></canvas></div>
-          <table class="stats-table" aria-label="Tabella distribuzione priorità aperte">
-            ${['critica','alta','media','bassa'].map(p => {
-              const label = p.charAt(0).toUpperCase() + p.slice(1);
-              const count = state.tasks.filter(t=>t.priority===p).length;
-              return `<tr><th>${label}</th><td>${count}</td></tr>`;
-            }).join('')}
+        <div style="margin-bottom: 1.5rem;">
+          <h4 style="margin-bottom: 0.5rem;">💰 Sintesi Esposizione</h4>
+          <table style="width: 100%;">
+            <tr><td style="width: 200px; color: var(--gray-500);">Totale Accordato</td><td><strong>${formatCurrency(crData.totaleAccordato)}</strong></td></tr>
+            <tr><td style="color: var(--gray-500);">Totale Utilizzato</td><td><strong>${formatCurrency(crData.totaleUtilizzato)}</strong></td></tr>
+            <tr><td style="color: var(--gray-500);">Margine Disponibile</td><td><strong>${formatCurrency(crData.totaleDisponibile)}</strong></td></tr>
+            <tr><td style="color: var(--gray-500);">Tasso di Utilizzo</td><td><strong>${formatPercent(utilizzoRate)}</strong></td></tr>
           </table>
         </div>
 
-        <div class="chart-box" style="grid-column: 1 / -1;">
-          <h4>Completamenti ultimi 14 giorni</h4>
-          <div class="chart-container"><canvas id="chLine" class="stats-canvas"></canvas></div>
-          <table class="stats-table" aria-label="Tabella completamenti ultimi 14 giorni">
-            ${(() => {
-              const days = [...Array(14)].map((_,i) => { const d=new Date(); d.setDate(d.getDate()-(13-i)); return d; });
-              const rows = days.map(d => {
-                const iso = d.toISOString().slice(0,10);
-                const count = state.completedTasks.filter(t => t.completedDate && t.completedDate.slice(0,10) === iso).length;
-                return `<tr><th>${d.toLocaleDateString('it-IT', { weekday:'short', day:'2-digit', month:'2-digit' })}</th><td>${count}</td></tr>`;
-              });
-              // summary row
-              const total14 = days.reduce((acc,d)=>{
-                const iso = d.toISOString().slice(0,10);
-                return acc + state.completedTasks.filter(t => t.completedDate && t.completedDate.slice(0,10) === iso).length;
-              },0);
-              rows.push(`<tr><th>Totale (14g)</th><td>${total14}</td></tr>`);
-              return rows.join('');
-            })()}
+        <div style="margin-bottom: 1.5rem;">
+          <h4 style="margin-bottom: 0.5rem;">⚠️ Anomalie e Criticità</h4>
+          <table style="width: 100%;">
+            <tr>
+              <td style="width: 200px; color: var(--gray-500);">Sofferenze</td>
+              <td style="color: ${crData.sofferenze > 0 ? 'var(--danger)' : 'var(--secondary)'}">
+                <strong>${crData.sofferenze > 0 ? formatCurrency(crData.sofferenze) : 'Nessuna'}</strong>
+              </td>
+            </tr>
+            <tr>
+              <td style="color: var(--gray-500);">Sconfinamenti</td>
+              <td style="color: ${crData.sconfinamenti > 0 ? 'var(--warning)' : 'var(--secondary)'}">
+                <strong>${crData.sconfinamenti > 0 ? formatCurrency(crData.sconfinamenti) : 'Nessuno'}</strong>
+              </td>
+            </tr>
+            <tr>
+              <td style="color: var(--gray-500);">Inadempienze Probabili</td>
+              <td style="color: ${crData.inadempienze > 0 ? 'var(--danger)' : 'var(--secondary)'}">
+                <strong>${crData.inadempienze > 0 ? formatCurrency(crData.inadempienze) : 'Nessuna'}</strong>
+              </td>
+            </tr>
           </table>
         </div>
-      </div>
-    `;
-    root.appendChild(wrap);
 
-    // ----- Charts (smaller + responsive) -----
-    const donutData = [opened, done];
+        <div style="margin-bottom: 1.5rem;">
+          <h4 style="margin-bottom: 0.5rem;">📊 Valutazione</h4>
+          <p>${getEvaluationText()}</p>
+        </div>
 
-    const ctx1 = document.getElementById('chDonut').getContext('2d');
-    charts.donut && charts.donut.destroy();
-    charts.donut = new Chart(ctx1, {
-      type: 'doughnut',
-      data: { labels: ['In corso', 'Completate'], datasets: [{ data: donutData, backgroundColor: ['#1d4ed8', '#22c55e'] }] },
-      options: { 
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom' } },
-        animation: false
-      }
-    });
-
-    // line: completate per giorno (ultimi 14 giorni)
-    const days = [...Array(14)].map((_,i) => { const d=new Date(); d.setDate(d.getDate()-(13-i)); return d; });
-    const labels = days.map(d => d.toLocaleDateString('it-IT', { day:'2-digit', month:'2-digit' }));
-    const completeCounts = days.map(d => {
-      const iso = d.toISOString().slice(0,10);
-      return state.completedTasks.filter(t => t.completedDate && t.completedDate.slice(0,10) === iso).length;
-    });
-    const ctx2 = document.getElementById('chLine').getContext('2d');
-    charts.line && charts.line.destroy();
-    charts.line = new Chart(ctx2, {
-      type: 'line',
-      data: { labels, datasets: [{ label: 'Completate', data: completeCounts, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.2)', tension: 0.25, fill: true }] },
-      options: { 
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } }, 
-        scales: { y: { beginAtZero: true, precision: 0 } },
-        animation: false
-      }
-    });
-
-    // bar: priorità aperte
-    const prios = ['critica','alta','media','bassa'];
-    const counts = prios.map(p => state.tasks.filter(t=>t.priority===p).length);
-    const ctx3 = document.getElementById('chBar').getContext('2d');
-    charts.bar && charts.bar.destroy();
-    charts.bar = new Chart(ctx3, {
-      type: 'bar',
-      data: { labels: prios.map(p=>p.toUpperCase()), datasets: [{ label:'Aperte', data: counts, backgroundColor: ['#dc2626','#f97316','#facc15','#22c55e'] }] },
-      options: { 
-        maintainAspectRatio: false,
-        plugins: { legend: { display:false } }, 
-        scales: { y: { beginAtZero:true, precision:0 } },
-        animation: false
-      }
-    });
-}
-
-  function renderSettings(root) {
-    const grid = document.createElement('div'); grid.className='settings-grid';
-
-    // Projects
-    const cardP = document.createElement('div'); cardP.className='settings-card';
-    cardP.innerHTML = `<h4>📂 Progetti</h4>`;
-    const listP = document.createElement('div'); state.projects.forEach(p => { const el=pill(p); const rm=btn('✖',()=>removeProject(p)); el.appendChild(rm); listP.appendChild(el); });
-    const addPwrap = document.createElement('div'); addPwrap.style.marginTop='8px'; addPwrap.style.display='flex'; addPwrap.style.gap='8px';
-    const inpP = document.createElement('input'); inpP.placeholder='Nuovo progetto'; inpP.className='field'; inpP.style.flex='1';
-    const addP = btn('Aggiungi', ()=>{ const v=inpP.value.trim(); if(!v) return; addProject(v); inpP.value=''; }); addP.classList.add('primary');
-    addPwrap.append(inpP, addP);
-    cardP.append(listP, addPwrap);
-
-    // People
-    const cardPe = document.createElement('div'); cardPe.className='settings-card';
-    cardPe.innerHTML = `<h4>👤 Persone</h4>`;
-    const listPe = document.createElement('div'); state.people.forEach(p => { const el=pill(p); const rm=btn('✖',()=>removePerson(p)); el.appendChild(rm); listPe.appendChild(el); });
-    const addPeWrap = document.createElement('div'); addPeWrap.style.marginTop='8px'; addPeWrap.style.display='flex'; addPeWrap.style.gap='8px';
-    const inpPe = document.createElement('input'); inpPe.placeholder='Nuova persona'; inpPe.className='field'; inpPe.style.flex='1';
-    const addPe = btn('Aggiungi', ()=>{ const v=inpPe.value.trim(); if(!v) return; addPerson(v); inpPe.value=''; }); addPe.classList.add('primary');
-    addPeWrap.append(inpPe, addPe);
-    cardPe.append(listPe, addPeWrap);
-
-    grid.append(cardP, cardPe);
-    root.appendChild(grid);
-  }
-
-  function btn(label, onClick, kind) {
-    const b = document.createElement('button'); b.className='btn' + (kind? ' ' + kind : ''); b.textContent=label; b.addEventListener('click', onClick); return b;
-  }
-
-  // ==============================
-  //  ACTIONS (CRUD + FILTERS)
-  // ==============================
-  function addTask(partial) {
-    const t = {
-      id: genId(),
-      title: partial.title.trim(),
-      project: partial.project || '',
-      assignee: partial.assignee || '',
-      priority: partial.priority || 'bassa',
-      progress: clamp(parseInt(partial.progress||0,10), 0, 100),
-      dueDate: partial.dueDate || null,
-      notes: partial.notes || '',
-    };
-    state.tasks.push(t); save(); render();
-  }
-
-  function updateTask(id, updates) {
-    const t = state.tasks.find(x => x.id === id);
-    if (!t) return;
-    Object.assign(t, updates);
-    t.progress = clamp(parseInt(t.progress||0,10), 0, 100);
-    save(); render();
-  }
-
-  function onDelete(id) {
-    const t = state.tasks.find(x => x.id === id);
-    if (!t) return;
-    if (confirm(`Eliminare definitivamente "${t.title}"?`)) {
-      state.tasks = state.tasks.filter(x => x.id !== id);
-      save(); render();
+        <div style="border-top: 1px solid var(--gray-200); padding-top: 1rem; margin-top: 2rem; font-size: 0.8rem; color: var(--gray-500);">
+          <p>Questo report è generato automaticamente da Scan360 CR Technology sulla base dei dati forniti.
+          Non costituisce consulenza finanziaria. Si consiglia di verificare sempre i dati con la documentazione ufficiale della Banca d'Italia.</p>
+        </div>
+      `;
     }
-  }
 
-  function onUpdateProgress(id, delta) {
-    const t = state.tasks.find(x => x.id === id);
-    if (!t) return;
-    t.progress = clamp((t.progress||0) + delta, 0, 100);
-    save(); render();
-  }
+    function getEvaluationText() {
+      const utilizzoRate = crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0;
 
-  function onComplete(id) {
-    const idx = state.tasks.findIndex(x => x.id === id);
-    if (idx === -1) return;
-    const t = state.tasks.splice(idx,1)[0];
-    t.progress = 100; t.completedDate = new Date().toISOString();
-    state.completedTasks.push(t);
-    save(); render();
-  }
+      let text = '';
 
-  function onRestore(id) {
-    const idx = state.completedTasks.findIndex(x => x.id === id);
-    if (idx === -1) return;
-    const t = state.completedTasks.splice(idx,1)[0];
-    t.progress = Math.min(90, t.progress||0); delete t.completedDate;
-    state.tasks.push(t);
-    save(); render();
-  }
+      if (crData.sofferenze > 0) {
+        text += `<p style="color: var(--danger);">❌ <strong>Presenza di sofferenze:</strong> L'importo di ${formatCurrency(crData.sofferenze)} in sofferenza rappresenta un elemento critico che compromette significativamente il merito creditizio del soggetto.</p>`;
+      }
 
-  function setTab(tab) { state.tab = tab; render(); }
+      if (crData.sconfinamenti > 0) {
+        text += `<p style="color: var(--warning);">⚠️ <strong>Sconfinamenti rilevati:</strong> Gli sconfinamenti per ${formatCurrency(crData.sconfinamenti)} indicano un utilizzo oltre i limiti concessi.</p>`;
+      }
 
-  function setFilters(partial) { state.filters = { ...state.filters, ...partial }; render(); }
-  function setQuery(q) { state.q = q; render(); }
-  function clearFilters() { state.filters={priority:'all', due:'all'}; state.q=''; $('#q').value=''; $('#fPrio').value='all'; $('#fDue').value='all'; render(); }
+      if (utilizzoRate > 0.85) {
+        text += `<p style="color: var(--warning);">⚠️ <strong>Elevato utilizzo fidi:</strong> Con un tasso di utilizzo del ${formatPercent(utilizzoRate)}, il soggetto presenta una limitata capacità di assorbimento di ulteriori esigenze finanziarie.</p>`;
+      }
 
-  // ==============================
-  //  IMPORT/EXPORT
-  // ==============================
-  function exportData() {
-    const data = { tasks: state.tasks, completedTasks: state.completedTasks, projects: state.projects, people: state.people, exportedAt: new Date().toISOString() };
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'task_manager_export.json'; a.click();
-    URL.revokeObjectURL(url);
-  }
+      if (crData.sofferenze === 0 && crData.sconfinamenti === 0 && utilizzoRate < 0.7) {
+        text += `<p style="color: var(--secondary);">✅ <strong>Situazione regolare:</strong> Il profilo creditizio non presenta anomalie significative. Il tasso di utilizzo del ${formatPercent(utilizzoRate)} lascia adeguati margini di manovra.</p>`;
+      }
 
-  function validateImportData(data) {
-    if (typeof data !== 'object' || !data) return false;
-    if (!('tasks' in data) || !('completedTasks' in data)) return false;
-    return Array.isArray(data.tasks) && Array.isArray(data.completedTasks);
-  }
-
-  function importData(json, mode='merge') {
-    let data;
-    try { data = JSON.parse(json); } catch { alert('JSON non valido'); return; }
-    if (!validateImportData(data)) { alert('Struttura dati non valida'); return; }
-
-    if (mode === 'replace') {
-      state.tasks = data.tasks || [];
-      state.completedTasks = data.completedTasks || [];
-      state.projects = data.projects && data.projects.length ? data.projects : state.projects;
-      state.people = data.people && data.people.length ? data.people : state.people;
-    } else {
-      // merge: concat e dedup per id
-      const byId = new Map();
-      [...state.tasks, ...data.tasks].forEach(t => byId.set(t.id, t));
-      state.tasks = [...byId.values()].filter(t => !t.completedDate);
-
-      const byIdC = new Map();
-      [...state.completedTasks, ...data.completedTasks].forEach(t => byIdC.set(t.id, t));
-      state.completedTasks = [...byIdC.values()].filter(t => t.completedDate);
-
-      // unione liste
-      state.projects = Array.from(new Set([...(data.projects||[]), ...state.projects]));
-      state.people = Array.from(new Set([...(data.people||[]), ...state.people]));
+      return text || '<p>Analisi non disponibile.</p>';
     }
-    save(); render();
-  }
 
-  // ==============================
-  //  SETTINGS ACTIONS
-  // ==============================
-  function addProject(p) { if (!state.projects.includes(p)) { state.projects.push(p); save(); render(); } }
-  function removeProject(p) {
-    if (!confirm(`Rimuovere il progetto "${p}"?`)) return;
-    state.projects = state.projects.filter(x => x !== p);
-    // pulizia tasks associati? no, manteniamo il valore testuale
-    save(); render();
-  }
-  function addPerson(p) { if (!state.people.includes(p)) { state.people.push(p); save(); render(); } }
-  function removePerson(p) {
-    if (!confirm(`Rimuovere la persona "${p}"?`)) return;
-    state.people = state.people.filter(x => x !== p);
-    save(); render();
-  }
+    // ==========================================
+    // UTILITIES
+    // ==========================================
 
-  // ==============================
-  //  MODAL & FORM HANDLING
-  // ==============================
-  const modal = $('#modal');
-  const modalTitle = $('#modalTitle');
-  const f = {
-    id: $('#taskId'),
-    title: $('#title'),
-    project: $('#project'),
-    assignee: $('#assignee'),
-    priority: $('#priority'),
-    progress: $('#progress'),
-    dueDate: $('#dueDate'),
-    notes: $('#notes'),
-  };
-
-  function openModal(task=null) {
-    modal.classList.add('open'); modal.setAttribute('aria-hidden','false');
-    // populate selects
-    f.project.innerHTML = `<option value="">—</option>` + state.projects.map(p=>`<option>${p}</option>`).join('');
-    f.assignee.innerHTML = `<option value="">—</option>` + state.people.map(p=>`<option>${p}</option>`).join('');
-
-    if (task) {
-      modalTitle.textContent = '✏️ Modifica attività';
-      f.id.value = String(task.id);
-      f.title.value = task.title;
-      f.project.value = task.project || '';
-      f.assignee.value = task.assignee || '';
-      f.priority.value = task.priority || 'bassa';
-      f.progress.value = String(task.progress||0);
-      f.dueDate.value = task.dueDate || '';
-      f.notes.value = task.notes || '';
-    } else {
-      modalTitle.textContent = '➕ Nuova attività';
-      f.id.value = '';
-      f.title.value = '';
-      f.project.value = '';
-      f.assignee.value = '';
-      f.priority.value = 'bassa';
-      f.progress.value = '0';
-      f.dueDate.value = '';
-      f.notes.value = '';
+    function showProgress() {
+      progressContainer.classList.add('active');
+      uploadZone.classList.add('processing');
     }
-    setTimeout(() => f.title.focus(), 0);
-  }
-  function closeModal() { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
 
-  $('#modalClose').addEventListener('click', closeModal);
-  $('#btnAnnulla').addEventListener('click', (e)=>{ e.preventDefault(); closeModal(); });
-  $('#taskForm').addEventListener('submit', (e)=>{
-    e.preventDefault();
-    if (!f.title.value.trim()) { alert('Il titolo è obbligatorio'); f.title.focus(); return; }
-    const payload = {
-      title: f.title.value,
-      project: f.project.value,
-      assignee: f.assignee.value,
-      priority: f.priority.value,
-      progress: parseInt(f.progress.value||'0',10),
-      dueDate: f.dueDate.value || null,
-      notes: f.notes.value
-    };
-    const id = f.id.value ? parseInt(f.id.value,10) : null;
-    if (id) updateTask(id, payload); else addTask(payload);
-    closeModal();
-  });
+    function hideProgress() {
+      progressContainer.classList.remove('active');
+      uploadZone.classList.remove('processing');
+    }
 
-  // ==============================
-  //  EVENT LISTENERS (UI)
-  // ==============================
-  $('#btnNuovo').addEventListener('click', () => openModal());
-  $('#btnEsporta').addEventListener('click', exportData);
-  $('#btnImporta').addEventListener('click', () => $('#fileImport').click());
-  $('#fileImport').addEventListener('change', (e)=>{
-    const file = e.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const mode = prompt('Modalità import: "merge" (default) o "replace"?', 'merge') || 'merge';
-      importData(String(reader.result), mode === 'replace' ? 'replace' : 'merge');
-      e.target.value = '';
-    };
-    reader.readAsText(file);
-  });
+    function updateProgress(percent, text) {
+      progressFill.style.width = percent + '%';
+      progressText.textContent = text;
+    }
 
-  $$('.tab').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+    function exportTable() {
+      const rows = [
+        ['Tipologia', 'Accordato', 'Utilizzato', 'Disponibile', '% Utilizzo'],
+        ['Autoliquidanti', crData.autoliquidanti.accordato, crData.autoliquidanti.utilizzato, crData.autoliquidanti.accordato - crData.autoliquidanti.utilizzato, (crData.autoliquidanti.accordato > 0 ? crData.autoliquidanti.utilizzato / crData.autoliquidanti.accordato * 100 : 0).toFixed(1) + '%'],
+        ['A Scadenza', crData.scadenza.accordato, crData.scadenza.utilizzato, crData.scadenza.accordato - crData.scadenza.utilizzato, (crData.scadenza.accordato > 0 ? crData.scadenza.utilizzato / crData.scadenza.accordato * 100 : 0).toFixed(1) + '%'],
+        ['A Revoca', crData.revoca.accordato, crData.revoca.utilizzato, crData.revoca.accordato - crData.revoca.utilizzato, (crData.revoca.accordato > 0 ? crData.revoca.utilizzato / crData.revoca.accordato * 100 : 0).toFixed(1) + '%'],
+        ['Garanzie', crData.garanzie.accordato, crData.garanzie.utilizzato, crData.garanzie.accordato - crData.garanzie.utilizzato, (crData.garanzie.accordato > 0 ? crData.garanzie.utilizzato / crData.garanzie.accordato * 100 : 0).toFixed(1) + '%'],
+        ['TOTALE', crData.totaleAccordato, crData.totaleUtilizzato, crData.totaleDisponibile, (crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato * 100 : 0).toFixed(1) + '%']
+      ];
 
-  $('#q').addEventListener('input', (e)=> setQuery(e.target.value));
-  $('#fPrio').addEventListener('change', (e)=> setFilters({ priority: e.target.value }));
-  $('#fDue').addEventListener('change', (e)=> setFilters({ due: e.target.value }));
-  $('#btnPulisciFiltri').addEventListener('click', clearFilters);
+      const csv = rows.map(row => row.join(';')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `CR_${crData.denominazione.replace(/\s+/g, '_')}_${crData.dataRiferimento}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
 
-  // ==============================
-  //  HELPERS
-  // ==============================
-  function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+    function printReport() {
+      window.print();
+    }
 
-  // ==============================
-  //  INIT
-  // ==============================
-  setToday();
-  load();
-  render();
+    function downloadReport() {
+      // Simple text-based report download
+      const report = `
+REPORT ANALISI CENTRALE RISCHI
+==============================
+Generato da Scan360 CR Technology
+Data: ${new Date().toLocaleDateString('it-IT')}
+
+DATI ANAGRAFICI
+---------------
+Denominazione: ${crData.denominazione}
+Codice Fiscale: ${crData.codiceFiscale}
+Data Riferimento: ${formatDateIT(crData.dataRiferimento)}
+N° Intermediari: ${crData.numIntermediari}
+
+SINTESI ESPOSIZIONE
+-------------------
+Totale Accordato: ${formatCurrency(crData.totaleAccordato)}
+Totale Utilizzato: ${formatCurrency(crData.totaleUtilizzato)}
+Margine Disponibile: ${formatCurrency(crData.totaleDisponibile)}
+Tasso di Utilizzo: ${formatPercent(crData.totaleAccordato > 0 ? crData.totaleUtilizzato / crData.totaleAccordato : 0)}
+
+DETTAGLIO LINEE
+---------------
+Autoliquidanti: Accordato ${formatCurrency(crData.autoliquidanti.accordato)} / Utilizzato ${formatCurrency(crData.autoliquidanti.utilizzato)}
+A Scadenza: Accordato ${formatCurrency(crData.scadenza.accordato)} / Utilizzato ${formatCurrency(crData.scadenza.utilizzato)}
+A Revoca: Accordato ${formatCurrency(crData.revoca.accordato)} / Utilizzato ${formatCurrency(crData.revoca.utilizzato)}
+Garanzie: Accordato ${formatCurrency(crData.garanzie.accordato)} / Utilizzato ${formatCurrency(crData.garanzie.utilizzato)}
+
+ANOMALIE
+--------
+Sofferenze: ${crData.sofferenze > 0 ? formatCurrency(crData.sofferenze) : 'Nessuna'}
+Sconfinamenti: ${crData.sconfinamenti > 0 ? formatCurrency(crData.sconfinamenti) : 'Nessuno'}
+Inadempienze: ${crData.inadempienze > 0 ? formatCurrency(crData.inadempienze) : 'Nessuna'}
+
+---
+Scan360 CR Technology - Analisi Automatizzata Centrale Rischi
+      `;
+
+      const blob = new Blob([report], { type: 'text/plain;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Report_CR_${crData.denominazione.replace(/\s+/g, '_')}_${crData.dataRiferimento}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ==========================================
+    // TABS NAVIGATION
+    // ==========================================
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const tabName = tab.dataset.tab;
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('panel-' + tabName).classList.add('active');
+      });
+    });
+
+    // ==========================================
+    // DEMO DATA (for testing)
+    // ==========================================
+
+    function loadDemoData() {
+      crData = {
+        denominazione: 'Esempio S.r.l.',
+        codiceFiscale: '01234567890',
+        dataRiferimento: '2024-09-30',
+        numIntermediari: 3,
+        autoliquidanti: { accordato: 150000, utilizzato: 85000 },
+        scadenza: { accordato: 500000, utilizzato: 420000 },
+        revoca: { accordato: 100000, utilizzato: 75000 },
+        garanzie: { accordato: 50000, utilizzato: 30000 },
+        sconfinamenti: 0,
+        sofferenze: 0,
+        inadempienze: 0,
+        passaggiPerdita: 0,
+        totaleAccordato: 800000,
+        totaleUtilizzato: 610000,
+        totaleDisponibile: 190000
+      };
+      displayResults();
+    }
+
+    // Uncomment to auto-load demo data for testing:
+    // loadDemoData();
 
   </script>
 </body>
