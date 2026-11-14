@@ -32,7 +32,7 @@ Il divieto vale anche quando l'utente dice "ricordati" o "tieni a mente": signif
 ## Cartella locale
 L'archivio locale è quello che l'utente usa già: non crearne uno parallelo.
 - Claude Cowork: `C:\Users\spano\Desktop\COWORK\`, nella sottocartella del tema (es. `5_PERSONALE\RUBRICA\…`, cartella del cliente o del progetto).
-- ChatGPT / Codex: la cartella di lavoro di ChatGPT sul computer (percorso da indicare qui: `<CARTELLA_GPT>`).
+- ChatGPT / Codex: la cartella `GPT WORK` sul computer (ipotesi: `C:\Users\spano\Desktop\GPT WORK\`, da confermare).
 - Server: `~/xab-archivio/`.
 - Se il tema non ha una sottocartella, chiedi dove metterlo invece di inventarla.
 - Nome file per note e diari: `AAAA-MM-GG_<argomento>.md`, con intestazione: data, fonte (Claude/ChatGPT), sessione, tipo.
