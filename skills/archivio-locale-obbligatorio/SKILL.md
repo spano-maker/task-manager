@@ -30,9 +30,18 @@ Il divieto vale anche quando l'utente dice "ricordati" o "tieni a mente": signif
 5. **Mai fallback silenziosi**: se né XAB né il filesystem sono raggiungibili (es. chat web senza accesso ai file), **non salvare altrove**. Di' «Non registrato: nessun archivio dell'utente raggiungibile» e dai il testo pronto da copiare.
 
 ## Cartella locale
-- Windows: `C:\Users\spano\XAB-archivio\` (ipotesi: confermare o correggere).
+L'archivio locale è quello che l'utente usa già: non crearne uno parallelo.
+- Claude Cowork: `C:\Users\spano\Desktop\COWORK\`, nella sottocartella del tema (es. `5_PERSONALE\RUBRICA\…`, cartella del cliente o del progetto).
+- ChatGPT / Codex: la cartella di lavoro di ChatGPT sul computer (percorso da indicare qui: `<CARTELLA_GPT>`).
 - Server: `~/xab-archivio/`.
-- Nome file: `AAAA-MM-GG_<argomento>.md`, intestazione con data, fonte (Claude/ChatGPT), sessione, tipo.
+- Se il tema non ha una sottocartella, chiedi dove metterlo invece di inventarla.
+- Nome file per note e diari: `AAAA-MM-GG_<argomento>.md`, con intestazione: data, fonte (Claude/ChatGPT), sessione, tipo.
+
+## File già salvati sul computer
+I lavori presenti in COWORK e nella cartella di ChatGPT sono archivio valido, ma non sono ancora in XAB finché non vengono caricati.
+- Quando produci o modifichi un file in quelle cartelle, caricalo anche in XAB (`ingestione_salva_ed_elabora`) e dichiaralo.
+- Se l'utente chiede di recuperare il pregresso, verifica prima in XAB cosa c'è già (`rag_search` sul nome del file) per evitare doppioni, poi carica il resto.
+- Non spostare, rinominare o cancellare file esistenti senza conferma.
 
 ## Se la memoria del fornitore si attiva da sola
 Se compare "Memoria aggiornata" (ChatGPT) o una memoria automatica (Claude):
